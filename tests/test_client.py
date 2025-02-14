@@ -1,11 +1,14 @@
 # test_client_management.py
 import pytest
 import os
-from wtph.certs import remove_client, main, create_key_pair
+from wtph.certs import remove_client, main, create_key_pair, export_client_cert
 from unittest.mock import patch, MagicMock
 from cryptography import x509
 from cryptography.hazmat.primitives import serialization, hashes
+from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from datetime import datetime, timedelta
+import base64
+import json
 
 @pytest.fixture
 def default_create(base_args, monkeypatch):
@@ -223,3 +226,69 @@ def test_info_nonexistent_certificate(mock_certificates):
     
     with pytest.raises(FileNotFoundError):
         load_certificate(mock_certificates / "nonexistent.crt")
+
+
+@pytest.fixture
+def mock_recipient_key(tmp_path):
+    """Fixture to provide a test recipient key pair"""
+    private_key = rsa.generate_private_key(
+        public_exponent=65537,
+        key_size=2048
+    )
+    public_key = private_key.public_key()
+    
+    # Save public key to temp file
+    pub_key_path = tmp_path / "recipient.pub"
+    with open(pub_key_path, "wb") as f:
+        f.write(public_key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        ))
+    
+    return {
+        'private_key': private_key,
+        'public_key': public_key,
+        'public_key_path': pub_key_path
+    }
+
+def test_export_certificate(cert_store, mock_recipient_key, tmp_path):
+    """Test exporting encrypted certificate data"""
+    # Store test certificate data
+    test_cert_data = {
+        'private_key': 'test_private_key',
+        'certificate': 'test_certificate',
+        'password': 'test_password'
+    }
+    cert_store.store_certificate('test-client', test_cert_data)
+    
+    # Export encrypted data
+    output_path = tmp_path / "test-client.enc"
+    encrypted_data = export_client_cert(
+        cert_store, 
+        'test-client', 
+        mock_recipient_key['public_key_path']
+    )
+    
+    assert encrypted_data is not None
+    
+    # Verify data can be decrypted
+    decrypted_data = mock_recipient_key['private_key'].decrypt(
+        base64.b64decode(encrypted_data),
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
+        )
+    )
+    
+    recovered_cert_data = json.loads(decrypted_data.decode())
+    assert recovered_cert_data == test_cert_data
+
+def test_export_nonexistent_certificate(cert_store, mock_recipient_key):
+    """Test exporting non-existent certificate"""
+    encrypted_data = export_client_cert(
+        cert_store,
+        'nonexistent-client',
+        mock_recipient_key['public_key_path']
+    )
+    assert encrypted_data is None

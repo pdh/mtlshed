@@ -1,12 +1,14 @@
 from cryptography import x509
 from cryptography.x509.oid import NameOID
 from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives.serialization import pkcs12
 from datetime import datetime, timedelta
 import os
 import argparse
 import secrets
+import base64
+import json
 from wtph.certstore import CertificateKeychain
 
 
@@ -193,9 +195,41 @@ def list_certificates(output_dir):
 def get_client_password(cert_store, client_name):
     """Retrieve client certificate password from keychain"""
     cert_data = cert_store.get_certificate(client_name)
-    if cert_data and 'password' in cert_data:
-        return cert_data['password']
+    if cert_data and "password" in cert_data:
+        return cert_data["password"]
     return None
+
+
+def encrypt_for_recipient(public_key_path, data):
+    """Encrypt data with recipient's public key"""
+    with open(public_key_path, "rb") as f:
+        public_key = serialization.load_pem_public_key(f.read())
+
+    # Convert data to bytes
+    data_bytes = json.dumps(data).encode()
+
+    # Encrypt with public key
+    encrypted = public_key.encrypt(
+        data_bytes,
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None,
+        ),
+    )
+
+    return base64.b64encode(encrypted).decode()
+
+
+def export_client_cert(cert_store, client_name, public_key_path):
+    """Export encrypted client certificate details"""
+    # Get client cert data from keychain
+    cert_data = cert_store.get_certificate(client_name)
+    if not cert_data:
+        return None
+
+    # Encrypt for recipient
+    return encrypt_for_recipient(public_key_path, cert_data)
 
 
 def parse_args():
@@ -225,9 +259,26 @@ def parse_args():
         "--name", required=True, help="Certificate name to inspect"
     )
 
-    get_pass_parser = subparsers.add_parser("get-password", help="Get client certificate password")
-    get_pass_parser.add_argument("--output-dir", default=".", help="Directory with certificates")
-    get_pass_parser.add_argument("--name", required=True, help="Client name to get password for")
+    get_pass_parser = subparsers.add_parser(
+        "get-password", help="Get client certificate password"
+    )
+    get_pass_parser.add_argument(
+        "--output-dir", default=".", help="Directory with certificates"
+    )
+    get_pass_parser.add_argument(
+        "--name", required=True, help="Client name to get password for"
+    )
+
+    export_parser = subparsers.add_parser(
+        "export", help="Export encrypted client certificate"
+    )
+    export_parser.add_argument("--name", required=True, help="Client name to export")
+    export_parser.add_argument(
+        "--public-key", required=True, help="Recipient's public key file"
+    )
+    export_parser.add_argument(
+        "--output", required=True, help="Output file for encrypted data"
+    )
 
     # Add common arguments to all parsers
     for p in [create_parser, add_parser]:
@@ -305,7 +356,7 @@ def main():
             print(f"Password for {args.name}: {password}")
         else:
             print(f"No password found for client: {args.name}")
-            
+
     elif args.command == "info":
         cert_path = None
         if args.name == "ca":
@@ -313,20 +364,22 @@ def main():
         elif args.name == "server":
             cert_path = os.path.join(args.output_dir, "server.crt")
         elif os.path.exists(os.path.join(args.output_dir, f"{args.name}.pfx")):
-            print(f"Certificate '{args.name}' is in PFX format and requires password to read")
+            print(
+                f"Certificate '{args.name}' is in PFX format and requires password to read"
+            )
             return
-        
+
         if cert_path and os.path.exists(cert_path):
             cert = load_certificate(cert_path)
             info = get_cert_info(cert)
-            
+
             print(f"\nCertificate details for: {args.name}")
             print("-" * 40)
             print(f"Subject:")
-            for key, value in info['subject'].items():
+            for key, value in info["subject"].items():
                 print(f"  {key}: {value}")
             print(f"\nIssuer:")
-            for key, value in info['issuer'].items():
+            for key, value in info["issuer"].items():
                 print(f"  {key}: {value}")
             print(f"\nValidity:")
             print(f"  Not Before: {info['not_valid_before']}")
@@ -335,6 +388,17 @@ def main():
             print(f"  Serial Number: {info['serial_number']}")
         else:
             print(f"Certificate '{args.name}' not found")
+    elif args.command == "export":
+        cert_store = CertificateKeychain()
+        encrypted_data = export_client_cert(cert_store, args.name, args.public_key)
+        if encrypted_data:
+            with open(args.output, "w") as f:
+                f.write(encrypted_data)
+            print(
+                f"Exported encrypted certificate data for {args.name} to {args.output}"
+            )
+        else:
+            print(f"Client certificate not found: {args.name}")
     elif args.command == "create":
         # Create CA
         ca_key = create_key_pair(args.key_size)

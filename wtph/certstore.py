@@ -3,6 +3,7 @@ from cryptography.fernet import Fernet
 import json
 import base64
 
+
 class CertificateKeychain:
     def __init__(self, service_name="certificate_manager"):
         self.service_name = service_name
@@ -20,7 +21,9 @@ class CertificateKeychain:
         """
         # Encrypt the certificate data
         encrypted_data = self.fernet.encrypt(json.dumps(cert_data).encode())
-        keyring.set_password(self.service_name, cert_name, base64.b64encode(encrypted_data).decode())
+        keyring.set_password(
+            self.service_name, cert_name, base64.b64encode(encrypted_data).decode()
+        )
 
     def get_certificate(self, cert_name):
         """Retrieve certificate data from keychain"""
@@ -38,4 +41,3 @@ class CertificateKeychain:
             return True
         except keyring.errors.PasswordDeleteError:
             return False
-
