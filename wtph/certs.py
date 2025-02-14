@@ -232,6 +232,28 @@ def export_client_cert(cert_store, client_name, public_key_path):
     return encrypt_for_recipient(public_key_path, cert_data)
 
 
+def decrypt_certificate(encrypted_data, private_key_path):
+    """Decrypt certificate data using private key"""
+    # Load private key
+    with open(private_key_path, "rb") as f:
+        private_key = serialization.load_pem_private_key(
+            f.read(), password=None  # Add password parameter if key is encrypted
+        )
+
+    # Decrypt data
+    encrypted_bytes = base64.b64decode(encrypted_data)
+    decrypted_data = private_key.decrypt(
+        encrypted_bytes,
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None,
+        ),
+    )
+
+    return json.loads(decrypted_data.decode())
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
 
@@ -279,6 +301,10 @@ def parse_args():
     export_parser.add_argument(
         "--output", required=True, help="Output file for encrypted data"
     )
+
+    decrypt_parser = subparsers.add_parser("decrypt", help="Decrypt certificate data")
+    decrypt_parser.add_argument("--private-key", required=True, help="Path to private key file")
+    decrypt_parser.add_argument("--input", required=True, help="Encrypted certificate file")
 
     # Add common arguments to all parsers
     for p in [create_parser, add_parser]:
@@ -399,6 +425,21 @@ def main():
             )
         else:
             print(f"Client certificate not found: {args.name}")
+    elif args.command == "decrypt":
+        try:
+            with open(args.input, 'r') as f:
+                encrypted_data = f.read()
+            
+            cert_data = decrypt_certificate(encrypted_data, args.private_key)
+            print("\nDecrypted Certificate Data:")
+            print("-" * 40)
+            print(f"Certificate:")
+            print(cert_data['certificate'])
+            print(f"\nPrivate Key:")
+            print(cert_data['private_key'])
+            print(f"\nPassword: {cert_data['password']}")
+        except Exception as e:
+            print(f"Error decrypting certificate data: {e}")
     elif args.command == "create":
         # Create CA
         ca_key = create_key_pair(args.key_size)

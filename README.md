@@ -65,43 +65,43 @@ python cert_manager.py get-password \
     --name client1
 ```
 
-## Certificate Export
-
-The utility supports secure export of client certificates using public key encryption.
+## Certificate Export and Decryption
 
 ### Export Encrypted Certificate
-
 ```bash
 python cert_manager.py export \
     --name client1 \
     --public-key recipient.pub \
     --output client1.enc
 ```
+Exports client certificate data encrypted with recipient's public key.
 
-Exports client certificate data encrypted with recipient's public key:
+### Decrypt Certificate Data
+```bash
+python cert_manager.py decrypt \
+    --private-key recipient.key \
+    --input client1.enc
+```
 
-- Client certificate
-- Private key
-- Certificate password
+The decrypt command:
+- Takes an encrypted certificate file
+- Uses the corresponding private key to decrypt
+- Displays the decrypted certificate details:
+  - Certificate data
+  - Private key
+  - Certificate password
 
 ### Security Features
+- Asymmetric encryption using RSA-OAEP with SHA256
+- Only the holder of the private key can decrypt
+- Secure transfer of client certificates
+- Complete certificate data including private keys and passwords
 
-- Uses RSA-OAEP padding with SHA256
-- Encrypts all sensitive data
-- Requires recipient's public key
-- Base64 encoded output
-- Only recipient with matching private key can decrypt
-
-### Export Format
-
-The exported file contains:
-
-- Base64-encoded encrypted data
-- Encrypted using recipient's public key
-- Contains JSON-formatted certificate details
-- Includes private key and password
-
-This allows secure sharing of client certificates with authorized recipients who possess the corresponding private key.
+### Usage Notes
+- Keep the private key secure
+- The private key must match the public key used for encryption
+- Encrypted files are base64 encoded for easy transfer
+- Decrypted data includes all necessary information to use the certificate
 
 ## Keychain Storage
 
