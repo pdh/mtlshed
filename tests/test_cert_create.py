@@ -96,12 +96,7 @@ def test_main_create(
             self.word_list_file = word_list_file
             self.client_passwords = None
 
-    def mock_parse_args():
-        return MockArgs()
-
-    monkeypatch.setattr("mtlshed.certs.parse_args", mock_parse_args)
-
-    main()
+    main(MockArgs())
 
     for expected_file in expected_files:
         assert os.path.exists(os.path.join(temp_dir, expected_file))

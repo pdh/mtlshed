@@ -12,29 +12,27 @@ import json
 
 
 @pytest.fixture
-def default_create(base_args, monkeypatch):
-    def mock_parse_args():
-        return base_args
-
-    monkeypatch.setattr("mtlshed.certs.parse_args", mock_parse_args)
-
-    main()
+def default_create(base_args):
+    main(base_args)
 
 
-def test_add_client(cert_store, temp_dir, base_args, default_create, monkeypatch):
-
+def test_add_client(
+    cert_store,
+    temp_dir,
+    base_args,
+    default_create,
+):
     # Test adding new client
     base_args.command = "add"
     base_args.client_names = ["newclient"]
     base_args.output_dir = temp_dir
 
-    monkeypatch.setattr("mtlshed.certs.parse_args", lambda: base_args)
-    main()
+    main(base_args)
 
     assert os.path.exists(os.path.join(temp_dir, "newclient.pfx"))
 
 
-def test_remove_client(cert_store, temp_dir, base_args, default_create, monkeypatch):
+def test_remove_client(cert_store, temp_dir, base_args, default_create):
 
     client_cert_path = os.path.join(temp_dir, "client1.pfx")
     assert os.path.exists(client_cert_path)
@@ -45,19 +43,17 @@ def test_remove_client(cert_store, temp_dir, base_args, default_create, monkeypa
         client_names = ["client1"]
         output_dir = temp_dir
 
-    monkeypatch.setattr("mtlshed.certs.parse_args", RemoveArgs())
     remove_client(RemoveArgs())
 
     assert not os.path.exists(client_cert_path)
 
 
-def test_remove_nonexistent_client(cert_store, temp_dir, monkeypatch):
+def test_remove_nonexistent_client(cert_store, temp_dir):
     class RemoveArgs:
         command = "remove"
         client_names = ["nonexistent"]
         output_dir = temp_dir
 
-    monkeypatch.setattr("mtlshed.certs.parse_args", RemoveArgs())
     remove_client(RemoveArgs())  # Should not raise exception
 
 
@@ -76,15 +72,13 @@ def test_client_operations_integration(
     client_name,
     expected_result,
     default_create,
-    monkeypatch,
 ):
     # Perform operation
     base_args.command = command
     base_args.client_names = [client_name]
     base_args.output_dir = temp_dir
 
-    monkeypatch.setattr("mtlshed.certs.parse_args", lambda: base_args)
-    main()
+    main(base_args)
 
     client_cert_path = os.path.join(temp_dir, f"{client_name}.pfx")
     assert os.path.exists(client_cert_path) == expected_result
