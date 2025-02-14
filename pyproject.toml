@@ -1,0 +1,14 @@
+[project]
+name = "wtph"
+description = "what the ph?"
+version = "0.0.1"
+
+[project.scripts]
+wtph-certs = "wtph.mtls:main"
+
+[build-system]
+build-backend = 'setuptools.build_meta'
+requires = [
+    'setuptools', 'wheel'
+]
+
