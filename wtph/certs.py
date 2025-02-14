@@ -10,9 +10,6 @@ import secrets
 
 
 def generate_passphrase(word_list, num_words=6, separator="-", capitalize=True):
-    # Common words list (you can expand this or load from a file)
-    # Using shorter common words that are easy to remember
-
     # Generate passphrase
     words = [secrets.choice(word_list) for _ in range(num_words)]
 
@@ -102,124 +99,178 @@ def save_pfx(key, cert, ca_cert, filename, password):
         f.write(pfx_data)
 
 
+def add_client(client_name, args, ca_cert, ca_key, words, passwd=None):
+    """Add a new client certificate"""
+    if passwd:
+        password = passwd
+    else:
+        password = generate_passphrase(words)
+
+    client_key = create_key_pair(args.key_size)
+    client_name_obj = create_cert_name(client_name, args)
+    client_cert = create_certificate(
+        client_key,
+        client_name_obj,
+        create_cert_name("CA", args),
+        ca_key,
+        valid_days=args.valid_days,
+    )
+
+    # Save client certificate as PFX
+    pfx_path = os.path.join(args.output_dir, f"{client_name}.pfx")
+    save_pfx(client_key, client_cert, ca_cert, pfx_path, password)
+    print(f"Created {pfx_path} with password: {password}")
+
+
+def remove_client(args):
+    """Remove a client certificate"""
+    pfx_path = os.path.join(args.output_dir, f"{args.client_names[0]}.pfx")
+    if os.path.exists(pfx_path):
+        os.remove(pfx_path)
+        print(f"Removed client certificate: {pfx_path}")
+    else:
+        print(f"Client certificate not found: {pfx_path}")
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
 
-    # TODO default to gen from /usr/share/dict/words?
-    parser.add_argument(
-        "-w",
-        "--word-list-file",
-        type=argparse.FileType("r"),
-        help="word list file",
-    )
+    # Add subparsers for different commands
+    subparsers = parser.add_subparsers(dest="command", help="Commands")
 
-    parser.add_argument(
-        "--output-dir", default=".", help="Directory to store generated certificates"
+    # Create command for initial setup
+    create_parser = subparsers.add_parser(
+        "create", help="Create initial CA and certificates"
     )
-    parser.add_argument(
-        "--key-size", type=int, default=2048, help="RSA key size (default: 2048)"
-    )
-    parser.add_argument(
-        "--valid-days",
-        type=int,
-        default=365,
-        help="Certificate validity in days (default: 365)",
-    )
+    add_parser = subparsers.add_parser("add", help="Add a new client")
+    remove_parser = subparsers.add_parser("remove", help="Remove a client")
 
-    # Certificate details
-    parser.add_argument(
-        "--country", default="US", help="Certificate country (default: US)"
-    )
-    parser.add_argument("--state", default="State", help="Certificate state/province")
-    parser.add_argument("--locality", default="Locality", help="Certificate locality")
-    parser.add_argument(
-        "--org", default="Organization", help="Certificate organization"
-    )
-    parser.add_argument(
-        "--org-unit", default="Dev", help="Certificate organizational unit"
-    )
-    parser.add_argument(
-        "--email", default="email@example.com", help="Certificate email address"
-    )
+    # Add common arguments to all parsers
+    for p in [create_parser, add_parser]:
+        p.add_argument(
+            "-w",
+            "--word-list-file",
+            type=str,
+            help="word list file",
+        )
+        p.add_argument(
+            "--output-dir",
+            default=".",
+            help="Directory to store generated certificates",
+        )
+        p.add_argument(
+            "--key-size", type=int, default=2048, help="RSA key size (default: 2048)"
+        )
+        p.add_argument(
+            "--valid-days",
+            type=int,
+            default=365,
+            help="Certificate validity in days (default: 365)",
+        )
+        p.add_argument(
+            "--country", default="US", help="Certificate country (default: US)"
+        )
+        p.add_argument("--state", default="State", help="Certificate state/province")
+        p.add_argument("--locality", default="Locality", help="Certificate locality")
+        p.add_argument("--org", default="Organization", help="Certificate organization")
+        p.add_argument(
+            "--org-unit", default="Dev", help="Certificate organizational unit"
+        )
+        p.add_argument(
+            "--email", default="email@example.com", help="Certificate email address"
+        )
 
-    # Server configuration
-    parser.add_argument(
+    # Add specific arguments for create command
+    create_parser.add_argument(
         "--server-cn", default="server.local", help="Server common name"
     )
-
-    # Client configuration
-    parser.add_argument(
-        "--client-names",
-        nargs="+",
-        help="List of client names, --client-names bob jim",
-    )
-    parser.add_argument(
-        "--client-passwords",
-        nargs="+",
-        help="List of client certificate passwords (must match number of clients)",
+    create_parser.add_argument("--client-names", nargs="+", help="List of client names")
+    create_parser.add_argument(
+        "--client-passwords", nargs="+", help="List of client certificate passwords"
     )
 
-    args_ = parser.parse_args()
-    if args_.client_passwords and len(args_.client_passwords) != len(
-        args_.client_names
-    ):
-        parser.error("Number of client passwords must match number of client names")
+    # Add specific arguments for add/remove commands
+    for p in [add_parser, remove_parser]:
+        p.add_argument(
+            "--client-names", nargs='+', required=True, help="Client name to add/remove"
+        )
+    add_parser.add_argument(
+        "--client-passwords", nargs='+', help="Client certificate password"
+    )
 
-    if not args_.client_passwords and not args_.word_list_file:
-        parser.error("if client passwords are unspecified a word list file is required")
-
-    if not args_.client_passwords:
-        with args_.word_list_file:
-            words = [line.strip() for line in args_.word_list_file.readlines()]
-        passwords = []
-        for _ in range(len(args_.client_names)):
-            passwords.append(generate_passphrase(words))
-        args_.client_passwords = passwords
-
-    return args_
+    return parser.parse_args()
 
 
 def main():
-    args_ = parse_args()
-    os.makedirs(args_.output_dir, exist_ok=True)
+    args = parse_args()
+    os.makedirs(args.output_dir, exist_ok=True)
+    words = []
+    if args.word_list_file:
+        with open(args.word_list_file, 'r') as f:
+            words = [line.strip() for line in f.readlines()]
 
-    # Create CA
-    ca_key = create_key_pair(args_.key_size)
-    ca_name = create_cert_name("CA", args_)
-    ca_cert = create_certificate(
-        ca_key, ca_name, ca_name, is_ca=True, valid_days=args_.valid_days
-    )
-
-    # Create Server Certificate
-    server_key = create_key_pair(args_.key_size)
-    server_name = create_cert_name(args_.server_cn, args_)
-    server_cert = create_certificate(
-        server_key, server_name, ca_name, ca_key, valid_days=args_.valid_days
-    )
-
-    # Create Client Certificates
-    for client_name, password in zip(args_.client_names, args_.client_passwords):
-        client_key = create_key_pair(args_.key_size)
-        client_name_obj = create_cert_name(client_name, args_)
-        client_cert = create_certificate(
-            client_key, client_name_obj, ca_name, ca_key, valid_days=args_.valid_days
+    if args.command == "create":
+        # Create CA
+        ca_key = create_key_pair(args.key_size)
+        ca_name = create_cert_name("CA", args)
+        ca_cert = create_certificate(
+            ca_key, ca_name, ca_name, is_ca=True, valid_days=args.valid_days
         )
 
-        # Save client certificate as PFX
-        pfx_path = os.path.join(args_.output_dir, f"{client_name}.pfx")
-        save_pfx(client_key, client_cert, ca_cert, pfx_path, password)
-        print(f"Created {pfx_path} with password: {password}")
+        # Create Server Certificate
+        server_key = create_key_pair(args.key_size)
+        server_name = create_cert_name(args.server_cn, args)
+        server_cert = create_certificate(
+            server_key, server_name, ca_name, ca_key, valid_days=args.valid_days
+        )
 
-    # Save CA and Server certificates
-    ca_path = os.path.join(args_.output_dir, "ca.crt")
-    server_key_path = os.path.join(args_.output_dir, "server.key")
-    server_cert_path = os.path.join(args_.output_dir, "server.crt")
+        # Create Client Certificates
+        if args.client_names:
+            for idx, client in enumerate(args.client_names):
+                passwd = None 
+                if args.client_passwords:
+                    passwd = args.client_passwords[idx]
+                add_client(
+                    client, args, ca_cert, ca_key, words=words, passwd=passwd,
+                ) # TODO storage
+        # Save CA and Server certificates
+        ca_path = os.path.join(args.output_dir, "ca.crt")
+        ca_key_path = os.path.join(args.output_dir, "ca.key")
+        server_key_path = os.path.join(args.output_dir, "server.key")
+        server_cert_path = os.path.join(args.output_dir, "server.crt")
+        save_cert(ca_cert, ca_path)
+        save_key(ca_key, ca_key_path)
+        save_key(server_key, server_key_path)
+        save_cert(server_cert, server_cert_path)
 
-    save_cert(ca_cert, ca_path)
-    save_key(server_key, server_key_path)
-    save_cert(server_cert, server_cert_path)
+        print(f"Created {ca_path}, {server_key_path}, and {server_cert_path}")
 
-    print(f"Created {ca_path}, {server_key_path}, and {server_cert_path}")
+    elif args.command == "add":
+        # Load existing CA certificate and key
+        ca_path = os.path.join(args.output_dir, "ca.crt")
+        ca_key_path = os.path.join(args.output_dir, "ca.key")
+        if not os.path.exists(ca_path):
+            print("CA certificate not found. Please run 'create' command first.")
+            return
+        
+        with open(ca_path, "rb") as f:
+            ca_cert = x509.load_pem_x509_certificate(f.read())
+        with open(ca_key_path, "rb") as f:
+            ca_key = serialization.load_pem_private_key(
+                f.read(),
+                password=None,  # or provide password if key is encrypted
+            )
+
+        for idx, client in enumerate(args.client_names):
+            passwd = None 
+            if args.client_passwords:
+                passwd = args.client_passwords[idx]
+            add_client(
+                client, args, ca_cert, ca_key, words, passwd=passwd,
+            ) # TODO storage
+
+    elif args.command == "remove":
+        remove_client(args)
 
 
 if __name__ == "__main__":

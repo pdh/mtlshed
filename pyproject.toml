@@ -1,10 +1,10 @@
 [project]
 name = "wtph"
-description = "what the ph?"
+description = "what the ph? dumb mtls cert tool"
 version = "0.0.1"
 
 [project.scripts]
-wtph-certs = "wtph.mtls:main"
+wtph-certs = "wtph.certs:main"
 
 [build-system]
 build-backend = 'setuptools.build_meta'
