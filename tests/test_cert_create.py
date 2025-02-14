@@ -70,10 +70,17 @@ def test_save_cert(temp_dir):
     ],
 )
 def test_main_create(
-    temp_dir, word_list_file, command, client_names, expected_files, monkeypatch
+    temp_dir,
+    word_list_file,
+    command,
+    client_names,
+    expected_files,
+    monkeypatch,
+    mock_config,
 ):
     class MockArgs:
         def __init__(self):
+            self.config = mock_config
             self.command = command
             self.output_dir = temp_dir
             self.key_size = 2048

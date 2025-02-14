@@ -9,7 +9,7 @@ import argparse
 import secrets
 import base64
 import json
-from wtph.certstore import CertificateKeychain
+from wtph.certstore import CertificateKeychain, CertStoreConfig, create_cert_store
 
 
 def generate_passphrase(word_list, num_words=6, separator="-", capitalize=True):
@@ -254,109 +254,104 @@ def decrypt_certificate(encrypted_data, private_key_path):
     return json.loads(decrypted_data.decode())
 
 
+def add_common_args(parser):
+    """Add common arguments to a parser"""
+    parser.add_argument("-w", "--word-list-file", type=str, help="word list file")
+    parser.add_argument("--output-dir", default=".", help="Directory for certificates")
+    parser.add_argument(
+        "--key-size", type=int, default=2048, help="RSA key size (default: 2048)"
+    )
+    parser.add_argument(
+        "--valid-days", type=int, default=365, help="Certificate validity in days"
+    )
+    parser.add_argument("--country", default="US", help="Certificate country")
+    parser.add_argument("--state", default="State", help="Certificate state/province")
+    parser.add_argument("--locality", default="Locality", help="Certificate locality")
+    parser.add_argument(
+        "--org", default="Organization", help="Certificate organization"
+    )
+    parser.add_argument(
+        "--org-unit", default="Dev", help="Certificate organizational unit"
+    )
+    parser.add_argument(
+        "--email", default="email@example.com", help="Certificate email"
+    )
+
+
+def create_subparser_commands(subparsers):
+    """Create all subparser commands"""
+    commands = {
+        "create": {"help": "Create initial CA and certificates"},
+        "add": {"help": "Add a new client"},
+        "remove": {"help": "Remove a client"},
+        "list": {"help": "List all certificates"},
+        "info": {"help": "Get detailed certificate information"},
+        "get-password": {"help": "Get client certificate password"},
+        "export": {"help": "Export encrypted client certificate"},
+        "decrypt": {"help": "Decrypt certificate data"},
+    }
+
+    return {
+        cmd: subparsers.add_parser(cmd, help=attrs["help"])
+        for cmd, attrs in commands.items()
+    }
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--config", type=str, help="Path to config file")
 
-    # Add subparsers for different commands
     subparsers = parser.add_subparsers(dest="command", help="Commands")
+    parsers = create_subparser_commands(subparsers)
 
-    # Create command for initial setup
-    create_parser = subparsers.add_parser(
-        "create", help="Create initial CA and certificates"
-    )
-    add_parser = subparsers.add_parser("add", help="Add a new client")
-    remove_parser = subparsers.add_parser("remove", help="Remove a client")
-    list_parser = subparsers.add_parser("list", help="List all certificates")
-    list_parser.add_argument(
-        "--output-dir", default=".", help="Directory with certificates"
-    )
+    # Add common arguments to relevant parsers
+    for p in [parsers["create"], parsers["add"]]:
+        add_common_args(p)
 
-    info_parser = subparsers.add_parser(
-        "info", help="Get detailed certificate information"
-    )
-    info_parser.add_argument(
-        "--output-dir", default=".", help="Directory with certificates"
-    )
-    info_parser.add_argument(
-        "--name", required=True, help="Certificate name to inspect"
-    )
-
-    get_pass_parser = subparsers.add_parser(
-        "get-password", help="Get client certificate password"
-    )
-    get_pass_parser.add_argument(
-        "--output-dir", default=".", help="Directory with certificates"
-    )
-    get_pass_parser.add_argument(
-        "--name", required=True, help="Client name to get password for"
-    )
-
-    export_parser = subparsers.add_parser(
-        "export", help="Export encrypted client certificate"
-    )
-    export_parser.add_argument("--name", required=True, help="Client name to export")
-    export_parser.add_argument(
-        "--public-key", required=True, help="Recipient's public key file"
-    )
-    export_parser.add_argument(
-        "--output", required=True, help="Output file for encrypted data"
-    )
-
-    decrypt_parser = subparsers.add_parser("decrypt", help="Decrypt certificate data")
-    decrypt_parser.add_argument("--private-key", required=True, help="Path to private key file")
-    decrypt_parser.add_argument("--input", required=True, help="Encrypted certificate file")
-
-    # Add common arguments to all parsers
-    for p in [create_parser, add_parser]:
-        p.add_argument(
-            "-w",
-            "--word-list-file",
-            type=str,
-            help="word list file",
-        )
-        p.add_argument(
-            "--output-dir",
-            default=".",
-            help="Directory to store generated certificates",
-        )
-        p.add_argument(
-            "--key-size", type=int, default=2048, help="RSA key size (default: 2048)"
-        )
-        p.add_argument(
-            "--valid-days",
-            type=int,
-            default=365,
-            help="Certificate validity in days (default: 365)",
-        )
-        p.add_argument(
-            "--country", default="US", help="Certificate country (default: US)"
-        )
-        p.add_argument("--state", default="State", help="Certificate state/province")
-        p.add_argument("--locality", default="Locality", help="Certificate locality")
-        p.add_argument("--org", default="Organization", help="Certificate organization")
-        p.add_argument(
-            "--org-unit", default="Dev", help="Certificate organizational unit"
-        )
-        p.add_argument(
-            "--email", default="email@example.com", help="Certificate email address"
+    # Add output-dir to relevant parsers
+    for cmd in ["list", "info", "get-password"]:
+        parsers[cmd].add_argument(
+            "--output-dir", default=".", help="Directory with certificates"
         )
 
-    # Add specific arguments for create command
-    create_parser.add_argument(
+    # Add name argument to relevant parsers
+    for cmd in ["info", "get-password", "export"]:
+        parsers[cmd].add_argument(
+            "--name", required=True, help=f"Certificate name for {cmd}"
+        )
+
+    # Add create-specific arguments
+    parsers["create"].add_argument(
         "--server-cn", default="server.local", help="Server common name"
     )
-    create_parser.add_argument("--client-names", nargs="+", help="List of client names")
-    create_parser.add_argument(
-        "--client-passwords", nargs="+", help="List of client certificate passwords"
+    parsers["create"].add_argument(
+        "--client-names", nargs="+", help="List of client names"
+    )
+    parsers["create"].add_argument(
+        "--client-passwords", nargs="+", help="List of client passwords"
     )
 
-    # Add specific arguments for add/remove commands
-    for p in [add_parser, remove_parser]:
+    # Add client management arguments
+    for p in [parsers["add"], parsers["remove"]]:
         p.add_argument(
             "--client-names", nargs="+", required=True, help="Client name to add/remove"
         )
-    add_parser.add_argument(
+    parsers["add"].add_argument(
         "--client-passwords", nargs="+", help="Client certificate password"
+    )
+
+    # Add export/decrypt specific arguments
+    parsers["export"].add_argument(
+        "--public-key", required=True, help="Recipient's public key file"
+    )
+    parsers["export"].add_argument(
+        "--output", required=True, help="Output file for encrypted data"
+    )
+    parsers["decrypt"].add_argument(
+        "--private-key", required=True, help="Path to private key file"
+    )
+    parsers["decrypt"].add_argument(
+        "--input", required=True, help="Encrypted certificate file"
     )
 
     return parser.parse_args()
@@ -364,7 +359,14 @@ def parse_args():
 
 def main():
     args = parse_args()
-    cert_store = CertificateKeychain()
+    if args.config:
+        config = CertStoreConfig(args.config)
+        cert_store = create_cert_store(config)
+        output_dir = config.output_dir
+    else:
+        cert_store = CertificateKeychain()
+        output_dir = args.output_dir
+    # cert_store = CertificateKeychain()
     os.makedirs(args.output_dir, exist_ok=True)
     words = []
     if args.word_list_file:
@@ -427,16 +429,16 @@ def main():
             print(f"Client certificate not found: {args.name}")
     elif args.command == "decrypt":
         try:
-            with open(args.input, 'r') as f:
+            with open(args.input, "r") as f:
                 encrypted_data = f.read()
-            
+
             cert_data = decrypt_certificate(encrypted_data, args.private_key)
             print("\nDecrypted Certificate Data:")
             print("-" * 40)
             print(f"Certificate:")
-            print(cert_data['certificate'])
+            print(cert_data["certificate"])
             print(f"\nPrivate Key:")
-            print(cert_data['private_key'])
+            print(cert_data["private_key"])
             print(f"\nPassword: {cert_data['password']}")
         except Exception as e:
             print(f"Error decrypting certificate data: {e}")

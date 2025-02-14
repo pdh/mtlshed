@@ -1,3 +1,6 @@
 cryptography
 pytest
-sqlcipher3
+hvac
+keyring
+cryptography
+pyyaml

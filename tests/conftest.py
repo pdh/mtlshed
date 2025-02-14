@@ -4,6 +4,7 @@ import tempfile
 from pathlib import Path
 from unittest.mock import patch
 import keyring
+import yaml
 
 
 @pytest.fixture
@@ -57,9 +58,10 @@ def word_list_file(temp_dir):
 
 
 @pytest.fixture
-def base_args(temp_dir, word_list_file):
+def base_args(temp_dir, word_list_file, mock_config):
     class Args:
         def __init__(self):
+            self.config = mock_config
             self.command = "create"
             self.output_dir = temp_dir
             self.key_size = 2048
@@ -79,6 +81,50 @@ def base_args(temp_dir, word_list_file):
             return word_list_file
 
     return Args()
+
+
+@pytest.fixture
+def mock_config(tmp_path):
+    """Fixture to provide a test config file"""
+    config_content = {
+        "store_type": "keychain",
+        "output_dir": str(tmp_path / "test_certs"),
+        "vault": {
+            "url": "http://vault:8200",
+            "token": "test-token",
+            "mount_point": "secret",
+            "path": "certificates",
+        },
+    }
+
+    config_path = tmp_path / "test_config.yaml"
+    with open(config_path, "w") as f:
+        yaml.dump(config_content, f)
+
+    return str(config_path)
+
+
+class MockArgs:
+    def __init__(self, config_path):
+        # Common arguments
+        self.config = config_path
+        self.country = "US"
+        self.state = "State"
+        self.locality = "Locality"
+        self.org = "Organization"
+        self.org_unit = "Dev"
+        self.email = "test@example.com"
+        self.output_dir = "./test_certs"
+        self.key_size = 2048
+        self.valid_days = 365
+        self.word_list_file = None
+
+        # Command-specific arguments
+        self.command = None
+        self.server_cn = "server.local"
+        self.client_names = ["test-client"]
+        self.client_passwords = None
+        self.name = None
 
 
 @pytest.fixture
