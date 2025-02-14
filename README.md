@@ -2,43 +2,98 @@
 
 what the ph? Kinda like [certstrap](https://github.com/square/certstrap) but dumberer.
 
+A command-line utility for creating and managing X.509 certificates with secure keychain storage for sensitive data.
 
-You supply some diceware wordlist and this script:
+## Features
+- Create CA (Certificate Authority) certificates
+- Generate server certificates
+- Add and remove client certificates
+- Generate secure passphrases for client certificates
+- PFX (PKCS#12) format support for client certificates
+- Secure storage of certificates and passwords in system keychain
+- Certificate and password retrieval capabilities
 
-- Creates a CA certificate and private key
-- Generates a server certificate signed by the CA
-- Creates two client certificates in PFX format with password protection
-- Saves all necessary files to disk
+## Usage
 
-The certificates are valid for 365 days and use 2048-bit RSA keys with SHA256 for signing. You can modify the parameters in the create_cert_name function to customize the certificate details. Remember to store the passwords securely and distribute them separately from the certificates.
-
-## usage
-
-```
-# Basic usage with defaults
-python script.py
-
-# Specify output directory and key size
-python script.py --output-dir ./certs --key-size 4096
-
-# Custom certificate details
-python script.py --country GB --state London --org "My Company"
-
-# Specify client names and passwords
-python script.py --client-names client1 client2 client3 --client-passwords pass1 pass2 pass3
-
-# Full example with multiple options
-python script.py \
+### Create Initial CA and Server Certificates
+```bash
+python cert_manager.py create \
     --output-dir ./certs \
-    --key-size 4096 \
-    --valid-days 730 \
-    --country US \
-    --state California \
-    --locality "San Francisco" \
-    --org "My Company" \
-    --org-unit "Engineering" \
-    --email "admin@mycompany.com" \
-    --server-cn "myserver.company.com" \
-    --client-names webapp1 webapp2 webapp3 \
-    --client-passwords secret1 secret2 secret3
+    --server-cn server.example.com \
+    --client-names client1 client2 \
+    --word-list-file wordlist.txt
 ```
+
+### Add New Client Certificate
+```bash
+python cert_manager.py add \
+    --output-dir ./certs \
+    --client-names newclient \
+    --client-passwords "optional-password"
+```
+
+### Remove Client Certificate
+```bash
+python cert_manager.py remove \
+    --output-dir ./certs \
+    --client-names client1
+```
+
+### List All Certificates
+```bash
+python cert_manager.py list \
+    --output-dir ./certs
+```
+
+### Get Certificate Details
+```bash
+python cert_manager.py info \
+    --output-dir ./certs \
+    --name client1
+```
+
+### Retrieve Client Certificate Password
+```bash
+python cert_manager.py get-password \
+    --name client1
+```
+
+## Keychain Storage
+The utility uses the system's native keychain (Keychain Access on macOS) to securely store:
+- Client certificate private keys
+- Certificate data
+- Client certificate passwords
+
+### Stored Data Format
+Each certificate entry in the keychain contains:
+```json
+{
+    "private_key": "PEM-encoded private key",
+    "certificate": "PEM-encoded certificate",
+    "password": "certificate password"
+}
+```
+
+## Requirements
+- Python 3.x
+- cryptography library
+- keyring library (for keychain access)
+
+## Installation
+```bash
+pip install cryptography keyring
+```
+
+## Security Features
+- Secure storage using system keychain
+- Encrypted storage of private keys
+- Password-protected client certificates
+- Automatic master key management
+- Access control through system keychain
+
+## Security Notes
+- Store CA private keys securely
+- Use strong passphrases for client certificates
+- Keep certificate files in a secure location
+- System keychain provides additional security layer
+- Access to stored credentials requires system authentication

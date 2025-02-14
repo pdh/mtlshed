@@ -2,7 +2,8 @@
 import pytest
 import tempfile
 from pathlib import Path
-
+from unittest.mock import patch
+import keyring
 
 @pytest.fixture
 def temp_dir():
@@ -77,3 +78,38 @@ def base_args(temp_dir, word_list_file):
             return word_list_file
 
     return Args()
+
+@pytest.fixture
+def mock_keychain():
+    """Fixture to provide a mock keychain"""
+    class MockKeychain:
+        def __init__(self):
+            self.store = {}
+        
+        def set_password(self, service_name, cert_name, password):
+            self.store[(service_name, cert_name)] = password
+            
+        def get_password(self, service_name, cert_name):
+            return self.store.get((service_name, cert_name))
+            
+        def delete_password(self, service_name, cert_name):
+            if (service_name, cert_name) in self.store:
+                del self.store[(service_name, cert_name)]
+            else:
+                raise keyring.errors.PasswordDeleteError()
+    
+    with patch('keyring.get_password') as mock_get, \
+         patch('keyring.set_password') as mock_set, \
+         patch('keyring.delete_password') as mock_delete:
+        
+        mock_keychain = MockKeychain()
+        mock_get.side_effect = mock_keychain.get_password
+        mock_set.side_effect = mock_keychain.set_password
+        mock_delete.side_effect = mock_keychain.delete_password
+        yield mock_keychain
+
+@pytest.fixture
+def cert_store(mock_keychain):
+    """Fixture to provide a CertificateKeychain instance"""
+    from wtph.certstore import CertificateKeychain
+    return CertificateKeychain()
