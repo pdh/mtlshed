@@ -1,7 +1,7 @@
 # test_client_management.py
 import pytest
 import os
-from wtph.certs import remove_client, main, create_key_pair, export_client_cert
+from mtlshed.certs import remove_client, main, create_key_pair, export_client_cert
 from unittest.mock import patch, MagicMock
 from cryptography import x509
 from cryptography.hazmat.primitives import serialization, hashes
@@ -16,7 +16,7 @@ def default_create(base_args, monkeypatch):
     def mock_parse_args():
         return base_args
 
-    monkeypatch.setattr("wtph.certs.parse_args", mock_parse_args)
+    monkeypatch.setattr("mtlshed.certs.parse_args", mock_parse_args)
 
     main()
 
@@ -28,7 +28,7 @@ def test_add_client(cert_store, temp_dir, base_args, default_create, monkeypatch
     base_args.client_names = ["newclient"]
     base_args.output_dir = temp_dir
 
-    monkeypatch.setattr("wtph.certs.parse_args", lambda: base_args)
+    monkeypatch.setattr("mtlshed.certs.parse_args", lambda: base_args)
     main()
 
     assert os.path.exists(os.path.join(temp_dir, "newclient.pfx"))
@@ -45,7 +45,7 @@ def test_remove_client(cert_store, temp_dir, base_args, default_create, monkeypa
         client_names = ["client1"]
         output_dir = temp_dir
 
-    monkeypatch.setattr("wtph.certs.parse_args", RemoveArgs())
+    monkeypatch.setattr("mtlshed.certs.parse_args", RemoveArgs())
     remove_client(RemoveArgs())
 
     assert not os.path.exists(client_cert_path)
@@ -57,7 +57,7 @@ def test_remove_nonexistent_client(cert_store, temp_dir, monkeypatch):
         client_names = ["nonexistent"]
         output_dir = temp_dir
 
-    monkeypatch.setattr("wtph.certs.parse_args", RemoveArgs())
+    monkeypatch.setattr("mtlshed.certs.parse_args", RemoveArgs())
     remove_client(RemoveArgs())  # Should not raise exception
 
 
@@ -83,25 +83,11 @@ def test_client_operations_integration(
     base_args.client_names = [client_name]
     base_args.output_dir = temp_dir
 
-    monkeypatch.setattr("wtph.certs.parse_args", lambda: base_args)
+    monkeypatch.setattr("mtlshed.certs.parse_args", lambda: base_args)
     main()
 
     client_cert_path = os.path.join(temp_dir, f"{client_name}.pfx")
     assert os.path.exists(client_cert_path) == expected_result
-
-
-# @pytest.fixture
-# def mock_certificates(tmp_path):
-#     """Fixture to create mock certificate files"""
-#     ca_cert = tmp_path / "ca.crt"
-#     server_cert = tmp_path / "server.crt"
-#     client_pfx = tmp_path / "client1.pfx"
-
-#     ca_cert.write_bytes(b"mock ca cert")
-#     server_cert.write_bytes(b"mock server cert")
-#     client_pfx.write_bytes(b"mock client pfx")
-
-#     return tmp_path
 
 
 @pytest.fixture
@@ -167,7 +153,7 @@ def mock_cert_info():
 
 def test_list_certificates(mock_certificates):
     """Test listing certificates"""
-    from wtph.certs import list_certificates
+    from mtlshed.certs import list_certificates
 
     certs = list_certificates(mock_certificates)
     assert "ca" in certs
@@ -179,9 +165,9 @@ def test_list_certificates(mock_certificates):
 @pytest.mark.parametrize("cert_name", ["ca", "server"])
 def test_info_command(mock_certificates, mock_cert_info, cert_name):
     """Test getting certificate info"""
-    from wtph.certs import get_cert_info, load_certificate
+    from mtlshed.certs import get_cert_info, load_certificate
 
-    with patch("wtph.certs.load_certificate") as mock_load:
+    with patch("mtlshed.certs.load_certificate") as mock_load:
         mock_cert = MagicMock()
         mock_cert.subject = x509.Name(
             [
@@ -220,7 +206,7 @@ def test_get_password(cert_store):
     cert_store.store_certificate("test-client", test_cert_data)
 
     # Test password retrieval
-    from wtph.certs import get_client_password
+    from mtlshed.certs import get_client_password
 
     password = get_client_password(cert_store, "test-client")
     assert password == "TestPass123"
@@ -228,7 +214,7 @@ def test_get_password(cert_store):
 
 def test_get_nonexistent_password(cert_store):
     """Test retrieving password for non-existent certificate"""
-    from wtph.certs import get_client_password
+    from mtlshed.certs import get_client_password
 
     password = get_client_password(cert_store, "nonexistent-client")
     assert password is None
@@ -236,7 +222,7 @@ def test_get_nonexistent_password(cert_store):
 
 def test_list_empty_directory(tmp_path):
     """Test listing certificates in empty directory"""
-    from wtph.certs import list_certificates
+    from mtlshed.certs import list_certificates
 
     certs = list_certificates(tmp_path)
     assert len(certs) == 0
@@ -244,7 +230,7 @@ def test_list_empty_directory(tmp_path):
 
 def test_info_nonexistent_certificate(mock_certificates):
     """Test getting info for non-existent certificate"""
-    from wtph.certs import load_certificate
+    from mtlshed.certs import load_certificate
 
     with pytest.raises(FileNotFoundError):
         load_certificate(mock_certificates / "nonexistent.crt")

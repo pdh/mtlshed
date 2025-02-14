@@ -1,6 +1,7 @@
-# wtph
+# mtlshed
 
-what the ph? Kinda like [certstrap](https://github.com/square/certstrap) but dumberer.
+dumber mtls cert management.
+Inspired by [certstrap](https://github.com/square/certstrap)
 
 A command-line utility for creating and managing X.509 certificates with secure keychain storage for sensitive data.
 
@@ -19,7 +20,7 @@ A command-line utility for creating and managing X.509 certificates with secure 
 ### Create Initial CA and Server Certificates
 
 ```bash
-python cert_manager.py create \
+mtlshed create \
     --output-dir ./certs \
     --server-cn server.example.com \
     --client-names client1 client2 \
@@ -29,7 +30,7 @@ python cert_manager.py create \
 ### Add New Client Certificate
 
 ```bash
-python cert_manager.py add \
+mtlshed add \
     --output-dir ./certs \
     --client-names newclient \
     --client-passwords "optional-password"
@@ -38,7 +39,7 @@ python cert_manager.py add \
 ### Remove Client Certificate
 
 ```bash
-python cert_manager.py remove \
+mtlshed remove \
     --output-dir ./certs \
     --client-names client1
 ```
@@ -46,14 +47,14 @@ python cert_manager.py remove \
 ### List All Certificates
 
 ```bash
-python cert_manager.py list \
+mtlshed list \
     --output-dir ./certs
 ```
 
 ### Get Certificate Details
 
 ```bash
-python cert_manager.py info \
+mtlshed info \
     --output-dir ./certs \
     --name client1
 ```
@@ -61,7 +62,7 @@ python cert_manager.py info \
 ### Retrieve Client Certificate Password
 
 ```bash
-python cert_manager.py get-password \
+mtlshed get-password \
     --name client1
 ```
 
@@ -70,7 +71,7 @@ python cert_manager.py get-password \
 ### Export Encrypted Certificate
 
 ```bash
-python cert_manager.py export \
+mtlshed export \
     --name client1 \
     --public-key recipient.pub \
     --output client1.enc
@@ -81,7 +82,7 @@ Exports client certificate data encrypted with recipient's public key.
 ### Decrypt Certificate Data
 
 ```bash
-python cert_manager.py decrypt \
+mtlshed decrypt \
     --private-key recipient.key \
     --input client1.enc
 ```

@@ -128,6 +128,32 @@ class MockArgs:
 
 
 @pytest.fixture
+def mock_args(tmp_path):
+    """Fixture to provide mock arguments with correct temp directory"""
+
+    class MockArgs:
+        def __init__(self, tmp_path):
+            self.config = None
+            self.country = "US"
+            self.state = "State"
+            self.locality = "Locality"
+            self.org = "Organization"
+            self.org_unit = "Dev"
+            self.email = "test@example.com"
+            self.output_dir = str(tmp_path)  # Use the pytest tmp_path
+            self.key_size = 2048
+            self.valid_days = 365
+            self.word_list_file = None
+            self.command = None
+            self.server_cn = "server.local"
+            self.client_names = ["test-client"]
+            self.client_passwords = None
+            self.name = None
+
+    return MockArgs(tmp_path)
+
+
+@pytest.fixture
 def mock_keychain():
     """Fixture to provide a mock keychain"""
 
@@ -161,6 +187,6 @@ def mock_keychain():
 @pytest.fixture
 def cert_store(mock_keychain):
     """Fixture to provide a CertificateKeychain instance"""
-    from wtph.certstore import CertificateKeychain
+    from mtlshed.certstore import CertificateKeychain
 
     return CertificateKeychain()

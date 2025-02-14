@@ -4,3 +4,5 @@ hvac
 keyring
 cryptography
 pyyaml
+oci
+textual

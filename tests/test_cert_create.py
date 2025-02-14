@@ -2,7 +2,7 @@
 import pytest
 import os
 from cryptography import x509
-from wtph.certs import (
+from mtlshed.certs import (
     create_certificate,
     create_key_pair,
     create_cert_name,
@@ -99,7 +99,7 @@ def test_main_create(
     def mock_parse_args():
         return MockArgs()
 
-    monkeypatch.setattr("wtph.certs.parse_args", mock_parse_args)
+    monkeypatch.setattr("mtlshed.certs.parse_args", mock_parse_args)
 
     main()
 

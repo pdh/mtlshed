@@ -1,10 +1,12 @@
 import keyring
 from cryptography.fernet import Fernet
 import json
-import base64
 import hvac
 import json
 import yaml
+import oci
+from base64 import b64encode, b64decode
+
 from typing import Optional
 
 
@@ -35,6 +37,12 @@ def create_cert_store(config: CertStoreConfig):
             mount_point=config.vault_config.get("mount_point", "secret"),
             path=config.vault_config.get("path", "certificates"),
         )
+    elif config.store_type == 'oci_vault':
+        return OCIVaultCertificateStore(
+            config_path=config.oci_vault_config.get('config_path'),
+            vault_id=config.oci_vault_config['vault_id'],
+            compartment_id=config.oci_vault_config['compartment_id']
+        )
     else:
         return CertificateKeychain()
 
@@ -45,9 +53,9 @@ class CertificateKeychain:
         # Get or create encryption key from keychain
         master_key = keyring.get_password(self.service_name, "master_key")
         if not master_key:
-            master_key = base64.b64encode(Fernet.generate_key()).decode()
+            master_key = b64encode(Fernet.generate_key()).decode()
             keyring.set_password(self.service_name, "master_key", master_key)
-        self.fernet = Fernet(base64.b64decode(master_key.encode()))
+        self.fernet = Fernet(b64decode(master_key.encode()))
 
     def store_certificate(self, cert_name, cert_data):
         """
@@ -57,14 +65,14 @@ class CertificateKeychain:
         # Encrypt the certificate data
         encrypted_data = self.fernet.encrypt(json.dumps(cert_data).encode())
         keyring.set_password(
-            self.service_name, cert_name, base64.b64encode(encrypted_data).decode()
+            self.service_name, cert_name, b64encode(encrypted_data).decode()
         )
 
     def get_certificate(self, cert_name):
         """Retrieve certificate data from keychain"""
         encrypted_data = keyring.get_password(self.service_name, cert_name)
         if encrypted_data:
-            encrypted_bytes = base64.b64decode(encrypted_data.encode())
+            encrypted_bytes = b64decode(encrypted_data.encode())
             decrypted_data = self.fernet.decrypt(encrypted_bytes)
             return json.loads(decrypted_data)
         return None
@@ -145,4 +153,82 @@ class VaultCertificateStore:
             return True
         except Exception as e:
             print(f"Error removing certificate from Vault: {e}")
+            return False
+
+class OCIVaultCertificateStore:
+    def __init__(self, config_path=None, vault_id=None, compartment_id=None):
+        """Initialize OCI Vault certificate store
+
+        Args:
+            config_path: Path to OCI config file
+            vault_id: OCI Vault OCID
+            compartment_id: OCI Compartment OCID
+        """
+        self.config = (
+            oci.config.from_file(config_path) if config_path else oci.config.from_file()
+        )
+        self.vault_client = oci.vault.VaultsClient(self.config)
+        self.secrets_client = oci.secrets.SecretsClient(self.config)
+        self.vault_id = vault_id
+        self.compartment_id = compartment_id
+
+    def store_certificate(self, cert_name, cert_data):
+        """Store certificate data in OCI Vault
+
+        Args:
+            cert_name: Name/identifier for the certificate
+            cert_data: Dictionary containing certificate details
+        """
+        try:
+            # Convert certificate data to string
+            secret_content = b64encode(json.dumps(cert_data).encode()).decode()
+
+            # Create secret
+            create_secret_details = oci.vault.models.CreateSecretDetails(
+                compartment_id=self.compartment_id,
+                secret_content=oci.vault.models.Base64SecretContentDetails(
+                    content=secret_content
+                ),
+                vault_id=self.vault_id,
+                key_id=self.vault_id,  # Using vault ID as key ID
+                secret_name=f"cert_{cert_name}",
+            )
+
+            self.secrets_client.create_secret(create_secret_details)
+            return True
+        except Exception as e:
+            print(f"Error storing certificate in OCI Vault: {e}")
+            return False
+
+    def get_certificate(self, cert_name):
+        """Retrieve certificate data from OCI Vault
+
+        Args:
+            cert_name: Name/identifier of the certificate to retrieve
+        """
+        try:
+            # Get secret
+            secret = self.secrets_client.get_secret_bundle(
+                secret_id=f"cert_{cert_name}"
+            )
+
+            # Decode and return certificate data
+            secret_content = secret.data.secret_bundle_content.content
+            return json.loads(b64decode(secret_content).decode())
+        except Exception as e:
+            print(f"Error retrieving certificate from OCI Vault: {e}")
+            return None
+
+    def remove_certificate(self, cert_name):
+        """Remove certificate data from OCI Vault
+
+        Args:
+            cert_name: Name/identifier of the certificate to remove
+        """
+        try:
+            # Schedule secret deletion
+            self.secrets_client.schedule_secret_deletion(secret_id=f"cert_{cert_name}")
+            return True
+        except Exception as e:
+            print(f"Error removing certificate from OCI Vault: {e}")
             return False

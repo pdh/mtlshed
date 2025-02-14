@@ -1,5 +1,5 @@
 # test_password_handling.py
-from wtph.certs import generate_passphrase
+from mtlshed.certs import generate_passphrase
 
 
 def test_generate_passphrase():
