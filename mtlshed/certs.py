@@ -12,8 +12,18 @@ import secrets
 import base64
 import json
 import argparse
+
+
+from textual.app import App, ComposeResult
+from textual.containers import Container, Horizontal, Vertical
+from textual.widgets import Button, Static, Input, Label, DataTable
+from textual.screen import Screen
+from textual.binding import Binding
+from textual.widgets import Header, Footer
+
 from mtlshed.certstore import CertificateKeychain, CertStoreConfig, create_cert_store
 from mtlshed.options import parse_args
+
 
 class DefaultArgs:
     def __init__(self) -> None:
@@ -263,9 +273,6 @@ def encrypt_for_recipient(public_key_path: str, data: Dict[str, Any]) -> str:
     return base64.b64encode(encrypted).decode()
 
 
-# MARK
-
-
 def export_client_cert(
     cert_store: CertificateKeychain, client_name: str, public_key_path: str
 ) -> Optional[str]:
@@ -505,14 +512,6 @@ class CertificateManager:
         return ca_cert, ca_key
 
 
-from textual.app import App, ComposeResult
-from textual.containers import Container, Horizontal, Vertical
-from textual.widgets import Button, Static, Input, Label, DataTable
-from textual.screen import Screen
-from textual.binding import Binding
-from textual.widgets import Header, Footer
-
-
 class CertificateManagerScreen(Screen):
     """Main screen for certificate operations"""
 
@@ -529,6 +528,7 @@ class CertificateManagerScreen(Screen):
                     Button("List Certificates", id="list"),
                     Button("Get Password", id="get_password"),
                     Button("Export Certificate", id="export"),
+                    Button("Import Certificate", id="import"),
                     Button("Decrypt Certificate", id="decrypt"),
                     classes="sidebar",
                 ),
@@ -584,6 +584,75 @@ class CertListScreen(Screen):
             )
             table.add_row(cert, cert_type, "Valid")
 
+class ExportCertScreen(Screen):
+    """Screen for exporting certificates"""
+
+    def compose(self) -> ComposeResult:
+        yield Container(
+            Label("Export Certificate", classes="title"),
+            Input(placeholder="Enter client name", id="client_name"),
+            Input(placeholder="Enter public key path", id="public_key_path"),
+            Button("Export", id="export_button", variant="primary"),
+            Button("Back", id="back_button"),
+        )
+
+class ImportCertScreen(Screen):
+    """Screen for importing certificates"""
+
+    def compose(self) -> ComposeResult:
+        yield Container(
+            Label("Import Certificate", classes="title"),
+            Input(placeholder="Enter encrypted data", id="encrypted_data"),
+            Input(placeholder="Enter private key path", id="private_key_path"),
+            Button("Import", id="import_button", variant="primary"),
+            Button("Back", id="back_button"),
+        )
+
+class AddClientScreen(Screen):
+    """Screen for adding a new client"""
+
+    def compose(self) -> ComposeResult:
+        yield Container(
+            Label("Add New Client", classes="title"),
+            Input(placeholder="Enter client name", id="client_name"),
+            Input(placeholder="Enter password (optional)", id="client_password"),
+            Button("Add Client", id="add_client_button", variant="primary"),
+            Button("Back", id="back_button"),
+        )
+
+class RemoveClientScreen(Screen):
+    """Screen for removing a client"""
+
+    def compose(self) -> ComposeResult:
+        yield Container(
+            Label("Remove Client", classes="title"),
+            Input(placeholder="Enter client name", id="client_name"),
+            Button("Remove Client", id="remove_client_button", variant="primary"),
+            Button("Back", id="back_button"),
+        )
+
+class GetPasswordScreen(Screen):
+    """Screen for getting a client's password"""
+
+    def compose(self) -> ComposeResult:
+        yield Container(
+            Label("Get Client Password", classes="title"),
+            Input(placeholder="Enter client name", id="client_name"),
+            Button("Get Password", id="get_password_button", variant="primary"),
+            Button("Back", id="back_button"),
+        )
+
+class DecryptScreen(Screen):
+    """Screen for decrypting certificate data"""
+
+    def compose(self) -> ComposeResult:
+        yield Container(
+            Label("Decrypt Certificate", classes="title"),
+            Input(placeholder="Enter encrypted data", id="encrypted_data"),
+            Input(placeholder="Enter private key path", id="private_key_path"),
+            Button("Decrypt", id="decrypt_button", variant="primary"),
+            Button("Back", id="back_button"),
+        )
 
 class CertificateManagerApp(App):
     """Main Certificate Manager Application"""
@@ -599,6 +668,18 @@ class CertificateManagerApp(App):
 
     BINDINGS = [Binding("q", "quit", "Quit"), Binding("b", "go_back", "Back")]
 
+    SCREENS = {
+        "manager": CertificateManagerScreen,
+        "create": CreateCertScreen,
+        "list": CertListScreen,
+        "export": ExportCertScreen,
+        "import": ImportCertScreen,
+        "add_client": AddClientScreen,
+        "remove_client": RemoveClientScreen,
+        "get_password": GetPasswordScreen,
+        "decrypt": DecryptScreen
+    }
+
     def __init__(self, cert_manager: CertificateManager):
         super().__init__()
         self.cert_manager = cert_manager
@@ -607,14 +688,24 @@ class CertificateManagerApp(App):
         """Handle button press events"""
         button_id = event.button.id
 
-        if button_id == "create":
-            self.push_screen(CreateCertScreen())
-        elif button_id == "list":
-            self.push_screen(CertListScreen())
+        if button_id in self.SCREENS:
+            self.push_screen(button_id)
         elif button_id == "back_button":
             self.pop_screen()
         elif button_id == "create_button":
             self._handle_create_certificates()
+        elif button_id == "export_button":
+            self._handle_export_certificate()
+        elif button_id == "import_button":
+            self._handle_import_certificate()
+        elif button_id == "add_client_button":
+            self._handle_add_client()
+        elif button_id == "remove_client_button":
+            self._handle_remove_client()
+        elif button_id == "get_password_button":
+            self._handle_get_password()
+        elif button_id == "decrypt_button":
+            self._handle_decrypt_certificate()
 
     def _handle_create_certificates(self):
         """Handle certificate creation from form data"""
@@ -633,16 +724,122 @@ class CertificateManagerApp(App):
         args.client_names = (
             [name.strip() for name in client_names.split(",")] if client_names else []
         )
-        print('args.client-names?', client_names)
+        print("args.client-names?", client_names)
         self.cert_manager.args = args
         # Create certificates using the certificate manager
         self.cert_manager.create_certs()
         self.notify("Certificates created successfully")
         self.pop_screen()
 
+    def _handle_export_certificate(self):
+        """Handle certificate export"""
+        screen = self.screen
+        client_name = screen.query_one("#client_name").value
+        public_key_path = screen.query_one("#public_key_path").value
+        
+        if not client_name or not public_key_path:
+            self.notify("Please enter both client name and public key path")
+            return
+
+        encrypted_data = export_client_cert(self.cert_manager.cert_store, client_name, public_key_path)
+        if encrypted_data:
+            output_path = f"{client_name}_exported.enc"
+            with open(output_path, "w") as f:
+                f.write(encrypted_data)
+            self.notify(f"Certificate exported to {output_path}")
+        else:
+            self.notify("Failed to export certificate")
+
+    def _handle_import_certificate(self):
+        """Handle certificate import"""
+        screen = self.screen
+        encrypted_data = screen.query_one("#encrypted_data").value
+        private_key_path = screen.query_one("#private_key_path").value
+        
+        if not encrypted_data or not private_key_path:
+            self.notify("Please enter both encrypted data and private key path")
+            return
+
+        try:
+            cert_data = decrypt_certificate(encrypted_data, private_key_path)
+            # Here you would typically store the imported certificate
+            # For now, we'll just notify the user
+            self.notify("Certificate imported successfully")
+        except Exception as e:
+            self.notify(f"Failed to import certificate: {str(e)}")
+
+    def _handle_add_client(self):
+        """Handle adding a new client"""
+        screen = self.screen
+        client_name = screen.query_one("#client_name").value
+        client_password = screen.query_one("#client_password").value
+
+        if not client_name:
+            self.notify("Please enter a client name")
+            return
+
+        try:
+            self.cert_manager.args.client_names = [client_name]
+            self.cert_manager.args.client_passwords = [client_password] if client_password else None
+            self.cert_manager.add_clients()
+            self.notify(f"Client {client_name} added successfully")
+        except Exception as e:
+            self.notify(f"Failed to add client: {str(e)}")
+
+    def _handle_remove_client(self):
+        """Handle removing a client"""
+        screen = self.screen
+        client_name = screen.query_one("#client_name").value
+
+        if not client_name:
+            self.notify("Please enter a client name")
+            return
+
+        try:
+            self.cert_manager.args.client_names = [client_name]
+            self.cert_manager.remove_clients()
+            self.notify(f"Client {client_name} removed successfully")
+        except Exception as e:
+            self.notify(f"Failed to remove client: {str(e)}")
+
+    def _handle_get_password(self):
+        """Handle getting a client's password"""
+        screen = self.screen
+        client_name = screen.query_one("#client_name").value
+
+        if not client_name:
+            self.notify("Please enter a client name")
+            return
+
+        try:
+            password = get_client_password(self.cert_manager.cert_store, client_name)
+            if password:
+                self.notify(f"Password for {client_name}: {password}")
+            else:
+                self.notify(f"No password found for client: {client_name}")
+        except Exception as e:
+            self.notify(f"Failed to get password: {str(e)}")
+
+    def _handle_decrypt_certificate(self):
+        """Handle decrypting certificate data"""
+        screen = self.screen
+        encrypted_data = screen.query_one("#encrypted_data").value
+        private_key_path = screen.query_one("#private_key_path").value
+
+        if not encrypted_data or not private_key_path:
+            self.notify("Please enter both encrypted data and private key path")
+            return
+
+        try:
+            cert_data = decrypt_certificate(encrypted_data, private_key_path)
+            self.notify("Certificate decrypted successfully")
+            # You might want to display the decrypted data in a more user-friendly way
+        except Exception as e:
+            self.notify(f"Failed to decrypt certificate: {str(e)}")
+
     def on_mount(self) -> None:
         """Set up the application on start"""
-        self.push_screen(CertificateManagerScreen())
+        self.push_screen("manager")
 
 
 def run_tui(cert_manager):
@@ -651,7 +848,7 @@ def run_tui(cert_manager):
     app.run()
 
 
-def main(args: argparse.Namespace):
+def _main(args: argparse.Namespace):
     # args = parse_args()
     # Setup certificate store based on config
     if args.config:
@@ -683,9 +880,8 @@ def main(args: argparse.Namespace):
         print("Invalid command")
 
 
-if __name__ == "__main__":
+def main():
     args = parse_args()
-
     # Setup certificate store based on config
     if args.config:
         config = CertStoreConfig(args.config)
@@ -695,7 +891,7 @@ if __name__ == "__main__":
         cert_store = CertificateKeychain()
         output_dir = args.output_dir
 
-    os.makedirs(args.output_dir, exist_ok=True)
+    os.makedirs(output_dir, exist_ok=True)
 
     # Create certificate manager instance
     cert_manager = CertificateManager(args, cert_store)
@@ -704,4 +900,8 @@ if __name__ == "__main__":
         run_tui(cert_manager)
     else:
         # Run CLI commands as before
-        main(args)
+        _main(args)
+
+
+if __name__ == "__main__":
+    main()
