@@ -506,7 +506,13 @@ class CertificateManager:
                 print(f"Removed client certificate file: {pfx_path}")
 
     def _create_ca(self):
-        """Create CA certificate and key"""
+        """
+        Create CA certificate and key
+        Args:
+            self class: The instance of the class.
+        Yields:
+            tuple[bytes, bytes]: A tuple containing the CA certificate and key as bytes.
+        """
         ca_key = create_key_pair(self.args.key_size)
         ca_name = create_cert_name("CA", self.args)
         ca_cert = create_certificate(
