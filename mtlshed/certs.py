@@ -274,7 +274,13 @@ def remove_client(args: DefaultArgs) -> None:
 
 
 def get_cert_info(cert: Certificate) -> Dict[str, Any]:
-    """Extract readable information from certificate"""
+    """
+    Extract readable information from certificate
+    Args:
+        cert Certificate: The certificate from which to extract information.
+    Returns:
+        Dict[str, Any]: A dictionary containing various pieces of information about the certificate.
+    """
     subject = cert.subject
     issuer = cert.issuer
     info: Dict[str, Any] = {
