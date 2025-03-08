@@ -773,7 +773,9 @@ class DecryptScreen(Screen):
         )
 
 class CertificateManagerApp(App):
-    """Main Certificate Manager Application"""
+    """
+    This is the main application class for the Certificate Manager. It handles the user interface and business logic for managing certificates.
+    """
 
     CSS = """
     .sidebar { width: 30%; background: $panel; padding: 1; }
