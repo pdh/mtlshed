@@ -132,12 +132,13 @@ class VaultCertificateStore:
         mount_point="secret",
         path="certificates",
     ):
-        """Initialize Vault certificate store
-
+        """
+        Initialize Vault certificate store
         Args:
-            url: Vault server URL
-            token: Vault authentication token
-            mount_point: Secret engine mount point
+            url str: Vault server URL
+            token str or None: Vault authentication token
+            mount_point str: Secret engine mount point
+            path str: Base path for certificate storage
             path: Base path for certificate storage
         """
         self.client = hvac.Client(url=url, token=token)
