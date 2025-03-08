@@ -726,7 +726,11 @@ class AddClientScreen(Screen):
         )
 
 class RemoveClientScreen(Screen):
-    """Screen for removing a client"""
+    """
+    Screen for removing a client
+    Yields:
+        Container: Yields a ComposeResult containing a container with a title, input field, and buttons for removing a client or going back.
+    """
 
     def compose(self) -> ComposeResult:
         yield Container(
