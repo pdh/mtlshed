@@ -632,7 +632,11 @@ class CreateCertScreen(Screen):
     """
 
     def compose(self) -> ComposeResult:
-        """Create the certificate creation form"""
+        """
+        Create the certificate creation form
+        Yields:
+            Container: The certificate creation form as a Container widget.
+        """
         yield Container(
             Label("Create CA and Server Certificates", classes="title"),
             Input(
