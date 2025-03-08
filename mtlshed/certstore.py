@@ -69,6 +69,13 @@ def create_cert_store(config: CertStoreConfig):
 
 class CertificateKeychain:
     def __init__(self, service_name="certificate_manager"):
+        """
+        A class for managing certificates in a keychain using encryption.
+        Args:
+            service_name str: The name of the service used for keychain operations. Default is 'certificate_manager'.
+        Returns:
+            bool: True if the certificate was successfully removed, False if it did not exist.
+        """
         self.service_name = service_name
         # Get or create encryption key from keychain
         master_key = keyring.get_password(self.service_name, "master_key")
