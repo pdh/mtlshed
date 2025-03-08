@@ -805,7 +805,13 @@ class CertificateManagerApp(App):
         self.cert_manager = cert_manager
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Handle button press events"""
+        """
+        Handle button press events
+        Args:
+            event Button.Pressed: The button press event containing the button information.
+        Returns:
+            None: No value is returned.
+        """
         button_id = event.button.id
 
         if button_id in self.SCREENS:
