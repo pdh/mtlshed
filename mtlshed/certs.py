@@ -662,6 +662,11 @@ class CertListScreen(Screen):
     """
 
     def compose(self) -> ComposeResult:
+        """
+        Composes a UI layout for the certificate list.
+        Yields:
+            Container: A container containing a title, a data table, and a button.
+        """
         yield Container(
             Label("Certificate List", classes="title"),
             DataTable(id="cert_table"),
