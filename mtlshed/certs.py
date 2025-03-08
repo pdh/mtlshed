@@ -435,7 +435,14 @@ class CertificateManager:
             self._create_client_certs(ca_cert, ca_key)
 
     def _store_ca_server_certs(self, ca_cert, ca_key, server_cert, server_key):
-        """Store CA and server certificates in cert store"""
+        """
+        Store CA and server certificates in cert store and also save them to the filesystem for compatibility
+        Args:
+            ca_cert Certificate: The CA certificate to be stored.
+            ca_key PrivateKey: The CA private key to be stored.
+            server_cert Certificate: The server certificate to be stored.
+            server_key PrivateKey: The server private key to be stored.
+        """
         ca_data = {
             "private_key": ca_key.private_bytes(
                 encoding=serialization.Encoding.PEM,
