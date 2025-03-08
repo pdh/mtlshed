@@ -925,7 +925,11 @@ class CertificateManagerApp(App):
             self.notify(f"Failed to add client: {str(e)}")
 
     def _handle_remove_client(self):
-        """Handle removing a client"""
+        """
+        Handle removing a client
+        Params:
+            screen object: The screen object from which the client name will be retrieved.
+        """
         screen = self.screen
         client_name = screen.query_one("#client_name").value
 
