@@ -36,6 +36,11 @@ class CertStoreConfig:
 
     @property
     def output_dir(self) -> str:
+        """
+        Returns the output directory path.
+        Returns:
+            str: The path to the output directory.
+        """
         return self.config.get("output_dir", ".")
 
     @property
