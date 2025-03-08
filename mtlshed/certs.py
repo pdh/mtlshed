@@ -338,7 +338,9 @@ class CertificateManager:
         return []
 
     def list_certs(self):
-        """Handle list command"""
+        """
+        Handle list command
+        """
         print("\nAvailable certificates:")
         print("----------------------")
         for cert_name in list_certificates(self.output_dir):
