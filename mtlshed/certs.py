@@ -27,6 +27,9 @@ from mtlshed.options import parse_args
 
 class DefaultArgs:
     def __init__(self) -> None:
+        """
+        Initializes an instance of the class with default values for various configuration parameters related to certificate generation or management.
+        """
         self.config: Optional[str] = None
         self.country: str = "US"
         self.state: str = "State"
