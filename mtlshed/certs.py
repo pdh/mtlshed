@@ -71,6 +71,13 @@ Returns:
 
 
 def create_key_pair(key_size: int) -> RSAPrivateKey:
+    """
+    Generate an RSA private key with the specified key size.
+    Args:
+        key_size int: The size of the key to generate.
+    Returns:
+        RSAPrivateKey: The generated RSA private key.
+    """
     return rsa.generate_private_key(public_exponent=65537, key_size=key_size)
 
 
