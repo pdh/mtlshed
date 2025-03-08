@@ -68,6 +68,13 @@ def create_cert_store(config: CertStoreConfig):
 
 
 class CertificateKeychain:
+        """
+        """
+        Initializes the CertificateManager object with an optional service name. If no service name is provided, it defaults to 'certificate_manager'. The method retrieves or generates an encryption key from the keychain and initializes a Fernet instance for encryption.
+        Args:
+            service_name str: The name of the service used for keychain operations. Defaults to 'certificate_manager'.
+        Returns:
+            None: None
     def __init__(self, service_name="certificate_manager"):
         """
         A class for managing certificates in a keychain using encryption.
