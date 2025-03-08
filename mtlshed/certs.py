@@ -1101,7 +1101,11 @@ class CertificateManagerApp(App):
 
 
 def run_tui(cert_manager):
-    """Run the TUI application"""
+    """
+    Run the TUI application
+    Args:
+        cert_manager CertificateManager: The certificate manager instance to be used by the application.
+    """
     app = CertificateManagerApp(cert_manager)
     app.run()
 
