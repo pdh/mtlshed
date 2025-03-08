@@ -595,7 +595,13 @@ class CertificateManagerScreen(Screen):
     """
 
     def compose(self) -> ComposeResult:
-        """Create the UI layout"""
+        """
+        Create the UI layout
+        Yields:
+            Header: Yields a header component for the UI layout.
+            Container: Yields a container component for the UI layout.
+            Footer: Yields a footer component for the UI layout.
+        """
         yield Header()
         yield Container(
             Horizontal(
