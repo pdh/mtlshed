@@ -85,6 +85,11 @@ Returns:
 
 
 def parse_args() -> argparse.Namespace:
+    """
+    Parses command-line arguments and returns a Namespace object.
+    Yields:
+        argparse.Namespace: A Namespace object containing the parsed command-line arguments.
+    """
     parser = argparse.ArgumentParser()
     add_all_arguments(parser)
 
