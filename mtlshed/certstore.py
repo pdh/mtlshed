@@ -11,6 +11,11 @@ from typing import Optional
 
 
 class CertStoreConfig:
+        """
+        """
+        Initializes the class with a configuration file.
+        Params:
+            config_path str: The path to the configuration file.
     def __init__(self, config_path: str):
         """
         This class is used to configure the CertStore.
