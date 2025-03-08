@@ -312,6 +312,12 @@ def decrypt_certificate(encrypted_data: str, private_key_path: str) -> Dict[str,
 
 
 class CertificateManager:
+        """
+        """
+        Initializes a new instance of the class.
+        Args:
+            args object: An object containing various arguments for the class initialization.
+            cert_store object: An object representing the certificate store to be used.
     def __init__(self, args, cert_store):
         """
         This class handles various certificate management operations such as creating, loading, listing, exporting, and decrypting certificates.
