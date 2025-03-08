@@ -249,9 +249,12 @@ class OCIVaultCertificateStore:
             return False
 
     def get_certificate(self, cert_name):
-        """Retrieve certificate data from OCI Vault
-
+        """
+        Retrieve certificate data from OCI Vault
         Args:
+            cert_name string: Name/identifier of the certificate to retrieve
+        Returns:
+            dict: Dictionary containing the certificate data
             cert_name: Name/identifier of the certificate to retrieve
         """
         try:
