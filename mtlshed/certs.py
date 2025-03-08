@@ -885,7 +885,9 @@ class CertificateManagerApp(App):
             self.notify("Failed to export certificate")
 
     def _handle_import_certificate(self):
-        """Handle certificate import"""
+        """
+        Handle certificate import
+        """
         screen = self.screen
         encrypted_data = screen.query_one("#encrypted_data").value
         private_key_path = screen.query_one("#private_key_path").value
