@@ -82,6 +82,14 @@ def create_key_pair(key_size: int) -> RSAPrivateKey:
 
 
 def create_cert_name(cn: str, args: DefaultArgs) -> Name:
+    """
+    Creates a certificate name using the provided common name and default arguments.
+    Params:
+        cn str: The common name for the certificate.
+        args DefaultArgs: An object containing default arguments for the certificate name.
+    Returns:
+        Name: The created certificate name.
+    """
     return x509.Name(
         [
             x509.NameAttribute(NameOID.COMMON_NAME, cn),
