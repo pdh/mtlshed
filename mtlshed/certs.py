@@ -326,7 +326,14 @@ def list_certificates(output_dir: str) -> List[str]:
 
 
 def get_client_password(
-    cert_store: CertificateKeychain, client_name: str
+    """
+    Retrieve client certificate password from keychain
+    Args:
+        cert_store CertificateKeychain: The certificate keychain from which to retrieve the client password.
+        client_name str: The name of the client whose certificate password is to be retrieved.
+    Returns:
+        Optional[str]: The client certificate password if found, otherwise None.
+    """
 ) -> Optional[str]:
     """Retrieve client certificate password from keychain"""
     cert_data = cert_store.get_certificate(client_name)
