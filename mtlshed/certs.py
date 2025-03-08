@@ -759,6 +759,11 @@ class DecryptScreen(Screen):
     """Screen for decrypting certificate data"""
 
     def compose(self) -> ComposeResult:
+        """
+        Composes the UI components for the decrypt certificate screen.
+        Yields:
+            Container: A container with various UI components for the decrypt certificate screen.
+        """
         yield Container(
             Label("Decrypt Certificate", classes="title"),
             Input(placeholder="Enter encrypted data", id="encrypted_data"),
