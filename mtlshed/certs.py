@@ -741,7 +741,11 @@ class RemoveClientScreen(Screen):
         )
 
 class GetPasswordScreen(Screen):
-    """Screen for getting a client's password"""
+    """
+    Screen for getting a client's password
+    Yields:
+        ComposeResult: A result that can be composed of UI components.
+    """
 
     def compose(self) -> ComposeResult:
         yield Container(
