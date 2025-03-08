@@ -389,7 +389,14 @@ def export_client_cert(
 
 
 def decrypt_certificate(encrypted_data: str, private_key_path: str) -> Dict[str, Any]:
-    """Decrypt certificate data using private key"""
+    """
+    Decrypt certificate data using private key
+    Args:
+        encrypted_data str: Base64-encoded encrypted data to be decrypted.
+        private_key_path str: Path to the file containing the private key used for decryption.
+    Returns:
+        Dict[str, Any]: Decrypted data as a dictionary.
+    """
     # Load private key
     with open(private_key_path, "rb") as f:
         private_key: RSAPrivateKey = serialization.load_pem_private_key(
