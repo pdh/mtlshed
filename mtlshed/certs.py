@@ -590,7 +590,9 @@ class CertificateManager:
 
 
 class CertificateManagerScreen(Screen):
-    """Main screen for certificate operations"""
+    """
+    This class represents the main screen for certificate operations. It provides a user interface for managing certificates, including creating CA & server certificates, adding and removing clients, listing certificates, getting passwords, exporting and importing certificates, and decrypting certificates.
+    """
 
     def compose(self) -> ComposeResult:
         """Create the UI layout"""
