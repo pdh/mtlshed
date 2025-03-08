@@ -627,7 +627,9 @@ class CertificateManagerScreen(Screen):
 
 
 class CreateCertScreen(Screen):
-    """Screen for creating CA and server certificates"""
+    """
+    Screen for creating CA and server certificates
+    """
 
     def compose(self) -> ComposeResult:
         """Create the certificate creation form"""
