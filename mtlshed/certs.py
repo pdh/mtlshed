@@ -166,6 +166,12 @@ def save_key(key: RSAPrivateKey, filename: str, password: Optional[str] = None) 
 
 
 def save_cert(cert: Certificate, filename: str) -> None:
+    """
+    Saves a certificate to a file in PEM format.
+    Args:
+        cert Certificate: The certificate to save.
+        filename str: The path to the file where the certificate will be saved.
+    """
     with open(filename, "wb") as f:
         f.write(cert.public_bytes(serialization.Encoding.PEM))
 
