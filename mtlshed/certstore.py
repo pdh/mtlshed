@@ -12,6 +12,11 @@ from typing import Optional
 
 class CertStoreConfig:
     def __init__(self, config_path: str):
+        """
+        This class is used to configure the CertStore.
+        Args:
+            config_path str: The path to the configuration file.
+        """
         with open(config_path, "r") as f:
             self.config = yaml.safe_load(f)
 
