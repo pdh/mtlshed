@@ -182,6 +182,17 @@ def save_pfx(
     ca_cert: Certificate,
     filename: str,
     password: str,
+"""
+Saves a PKCS#12 file containing a private key, certificate, and CA certificate.
+Args:
+    key RSAPrivateKey: The private key to include in the PKCS#12 file.
+    cert Certificate: The certificate to include in the PKCS#12 file.
+    ca_cert Certificate: The CA certificate to include in the PKCS#12 file.
+    filename str: The path to the file where the PKCS#12 data will be saved.
+    password str: The password to encrypt the PKCS#12 file.
+Returns:
+    None: This function does not return anything.
+"""
 ) -> None:
     pfx_data: bytes = pkcs12.serialize_key_and_certificates(
         name=b"client-cert",
