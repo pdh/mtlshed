@@ -834,7 +834,13 @@ class CertificateManagerApp(App):
             self._handle_decrypt_certificate()
 
     def _handle_create_certificates(self):
-        """Handle certificate creation from form data"""
+        """
+        Handle certificate creation from form data
+        Params:
+            screen Screen: The screen object containing the form data.
+            args DefaultArgs: The arguments object initialized with form data.
+            client_names str: The value of the client names input field.
+        """
         screen = self.screen
         args = DefaultArgs()  # Create mock args with form data
         args.server_cn = screen.query_one("#server_cn").value
