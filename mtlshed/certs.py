@@ -313,6 +313,12 @@ def decrypt_certificate(encrypted_data: str, private_key_path: str) -> Dict[str,
 
 class CertificateManager:
     def __init__(self, args, cert_store):
+        """
+        This class handles various certificate management operations such as creating, loading, listing, exporting, and decrypting certificates.
+        Args:
+            args Namespace: Namespace containing command-line arguments for configuration.
+            cert_store CertificateStore: Object responsible for storing and retrieving certificate data.
+        """
         self.args = args
         self.cert_store = cert_store
         self.output_dir = args.output_dir
