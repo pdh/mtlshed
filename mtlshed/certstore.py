@@ -93,7 +93,11 @@ class CertificateKeychain:
 
     def store_certificate(self, cert_name, cert_data):
         """
-        Store certificate data securely in keychain
+        """
+        Args:
+            cert_name string: The name under which the certificate data will be stored in the keychain.
+            cert_data dict: A dictionary containing private_key, certificate, and password.
+        """
         cert_data should be a dict containing private_key, certificate, and password
         """
         # Encrypt the certificate data
