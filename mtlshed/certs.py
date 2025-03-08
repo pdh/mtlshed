@@ -212,7 +212,18 @@ def add_client(
     ca_key: RSAPrivateKey,
     words: List[str],
     passwd: Optional[str] = None,
-) -> None:
+"""
+Add a new client certificate with keychain storage
+Args:
+    client_name str: The name of the client certificate to be added.
+    args DefaultArgs: Configuration arguments for the client certificate creation.
+    ca_cert Certificate: The CA certificate used to sign the client certificate.
+    ca_key RSAPrivateKey: The CA private key used to sign the client certificate.
+    words List[str]: A list of words used to generate a passphrase if no password is provided.
+    passwd Optional[str]: An optional password for encrypting the client certificate. If not provided, a passphrase will be generated using the provided words.
+Returns:
+    None: This function does not return any value.
+"""
     """Add a new client certificate with keychain storage"""
     password = passwd or generate_passphrase(words)
 
