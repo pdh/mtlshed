@@ -548,7 +548,12 @@ class CertificateManager:
         return server_cert, server_key
 
     def _create_client_certs(self, ca_cert, ca_key):
-        """Create client certificates"""
+        """
+        Create client certificates
+        Args:
+            ca_cert string: CA certificate file path
+            ca_key string: CA key file path
+        """
         if self.args.client_names:
             for idx, client in enumerate(self.args.client_names):
                 passwd = None
