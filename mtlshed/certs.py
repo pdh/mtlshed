@@ -986,7 +986,11 @@ class CertificateManagerApp(App):
             self.notify(f"Failed to decrypt certificate: {str(e)}")
 
     def on_mount(self) -> None:
-        """Set up the application on start"""
+        """
+        Set up the application on start
+        Returns:
+            None: No value is returned
+        """
         self.push_screen("manager")
 
 
