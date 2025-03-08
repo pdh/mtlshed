@@ -1,9 +1,16 @@
-from typing import Dict, List, Any
+"""mtlshed options"""
+from typing import Dict, List
 import argparse
 
 
 def add_all_arguments(parser: argparse.ArgumentParser) -> None:
-    """Add all possible arguments to the parser"""
+    """
+    Add all possible arguments to the parser
+    Args:
+        parser argparse.ArgumentParser: The parser to which arguments will be added.
+    Returns:
+        None: This function does not return anything.
+    """
 
     # Common certificate configuration
     parser.add_argument("--config", type=str, help="Path to config file")
@@ -50,7 +57,13 @@ def add_all_arguments(parser: argparse.ArgumentParser) -> None:
 def create_subparser_commands(
     subparsers: argparse._SubParsersAction,
 ) -> Dict[str, argparse.ArgumentParser]:
-    """Create all subparser commands"""
+    """
+    Create all subparser commands for a command-line interface.
+    Params:
+        subparsers argparse._SubParsersAction: The subparsers action object from argparse to add subcommands.
+    Returns:
+        Dict[str, argparse.ArgumentParser]: A dictionary where keys are command names and values are the corresponding argparse.ArgumentParser objects.
+    """
     commands: Dict[str, Dict[str, str]] = {
         "create": {"help": "Create initial CA and certificates"},
         "add": {"help": "Add a new client"},
@@ -73,6 +86,11 @@ def create_subparser_commands(
 
 
 def parse_args() -> argparse.Namespace:
+    """
+    Parses command-line arguments and returns a Namespace object.
+    Yields:
+        argparse.Namespace: A Namespace object containing the parsed command-line arguments.
+    """
     parser = argparse.ArgumentParser()
     add_all_arguments(parser)
 
@@ -86,7 +104,13 @@ def parse_args() -> argparse.Namespace:
 
 
 def validate_args(args: argparse.Namespace) -> None:
-    """Validate required arguments based on command"""
+    """
+    Validate required arguments based on command
+    Args:
+        args argparse.Namespace: Namespace containing the parsed command-line arguments
+    Returns:
+        None: No explicit return value; function raises an exception if validation fails
+    """
     if not args.command:
         return
 
