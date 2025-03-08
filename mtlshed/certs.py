@@ -945,7 +945,13 @@ class CertificateManagerApp(App):
             self.notify(f"Failed to remove client: {str(e)}")
 
     def _handle_get_password(self):
-        """Handle getting a client's password"""
+        """
+        Handle getting a client's password
+        Params:
+            self object: The instance of the class.
+        Returns:
+            void: This method does not return any value.
+        """
         screen = self.screen
         client_name = screen.query_one("#client_name").value
 
