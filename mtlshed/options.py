@@ -55,7 +55,13 @@ def add_all_arguments(parser: argparse.ArgumentParser) -> None:
 
 def create_subparser_commands(
     subparsers: argparse._SubParsersAction,
-) -> Dict[str, argparse.ArgumentParser]:
+"""
+Create all subparser commands for a command-line interface.
+Params:
+    subparsers argparse._SubParsersAction: The subparsers action object from argparse to add subcommands.
+Returns:
+    Dict[str, argparse.ArgumentParser]: A dictionary where keys are command names and values are the corresponding argparse.ArgumentParser objects.
+"""
     """Create all subparser commands"""
     commands: Dict[str, Dict[str, str]] = {
         "create": {"help": "Create initial CA and certificates"},
