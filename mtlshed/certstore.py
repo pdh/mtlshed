@@ -271,9 +271,12 @@ class OCIVaultCertificateStore:
             return None
 
     def remove_certificate(self, cert_name):
-        """Remove certificate data from OCI Vault
-
+        """
+        Remove certificate data from OCI Vault
         Args:
+            cert_name string: Name/identifier of the certificate to remove
+        Returns:
+            bool: True if the certificate was successfully removed, False otherwise
             cert_name: Name/identifier of the certificate to remove
         """
         try:
