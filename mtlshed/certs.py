@@ -343,7 +343,14 @@ def get_client_password(
 
 
 def encrypt_for_recipient(public_key_path: str, data: Dict[str, Any]) -> str:
-    """Encrypt data with recipient's public key"""
+    """
+    Encrypt data with recipient's public key
+    Args:
+        public_key_path str: Path to the recipient's public key file in PEM format.
+        data Dict[str, Any]: Data to be encrypted, represented as a dictionary.
+    Returns:
+        str: Encrypted data encoded in base64.
+    """
     with open(public_key_path, "rb") as f:
         public_key: RSAPublicKey = serialization.load_pem_public_key(f.read())
 
