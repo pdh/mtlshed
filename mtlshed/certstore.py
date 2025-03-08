@@ -49,7 +49,13 @@ class CertStoreConfig:
 
 
 def create_cert_store(config: CertStoreConfig):
-    """Create certificate store based on config"""
+    """
+    Create certificate store based on the provided configuration
+    Args:
+        config CertStoreConfig: Configuration object specifying the type of certificate store and its parameters.
+    Returns:
+        Union[VaultCertificateStore, OCIVaultCertificateStore, CertificateKeychain]: A certificate store object based on the configuration provided.
+    """
     if config.store_type == "vault":
         return VaultCertificateStore(
             url=config.vault_config["url"],
