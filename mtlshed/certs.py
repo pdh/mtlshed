@@ -700,6 +700,11 @@ class ImportCertScreen(Screen):
     """Screen for importing certificates"""
 
     def compose(self) -> ComposeResult:
+        """
+        Compose a UI for importing a certificate.
+        Yields:
+            Container: A container with UI components for importing a certificate.
+        """
         yield Container(
             Label("Import Certificate", classes="title"),
             Input(placeholder="Enter encrypted data", id="encrypted_data"),
