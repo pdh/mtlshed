@@ -1,35 +1,34 @@
-import keyring
-from cryptography.fernet import Fernet
-import json
-import hvac
-import json
-import yaml
-import oci
-from base64 import b64encode, b64decode
+"""certificate store"""
 
+import json
+from base64 import b64encode, b64decode
 from typing import Optional
+import yaml
+import keyring
+import oci
+import hvac
+from cryptography.fernet import Fernet
 
 
 class CertStoreConfig:
-        """
-        """
-        Initializes the class with a configuration file.
-        Params:
-            config_path str: The path to the configuration file.
+    """
+    Certstore configuration
+    """
+
     def __init__(self, config_path: str):
         """
         This class is used to configure the CertStore.
         Args:
             config_path str: The path to the configuration file.
         """
-        with open(config_path, "r") as f:
+        with open(config_path, "r", encoding="utf-8") as f:
             self.config = yaml.safe_load(f)
 
     @property
     def store_type(self) -> str:
         """
         Stores the type of the configuration.
-        Yields:
+        Returns:
             str: The type of the configuration.
         """
         return self.config.get("store_type", "keychain")
@@ -45,6 +44,7 @@ class CertStoreConfig:
 
     @property
     def vault_config(self) -> Optional[dict]:
+        """optional vault config"""
         return self.config.get("vault", None)
 
 
@@ -63,31 +63,25 @@ def create_cert_store(config: CertStoreConfig):
             mount_point=config.vault_config.get("mount_point", "secret"),
             path=config.vault_config.get("path", "certificates"),
         )
-    elif config.store_type == 'oci_vault':
+    elif config.store_type == "oci_vault":
         return OCIVaultCertificateStore(
-            config_path=config.oci_vault_config.get('config_path'),
-            vault_id=config.oci_vault_config['vault_id'],
-            compartment_id=config.oci_vault_config['compartment_id']
+            config_path=config.oci_vault_config.get("config_path"),
+            vault_id=config.oci_vault_config["vault_id"],
+            compartment_id=config.oci_vault_config["compartment_id"],
         )
     else:
         return CertificateKeychain()
 
 
 class CertificateKeychain:
-        """
-        """
-        Initializes the CertificateManager object with an optional service name. If no service name is provided, it defaults to 'certificate_manager'. The method retrieves or generates an encryption key from the keychain and initializes a Fernet instance for encryption.
-        Args:
-            service_name str: The name of the service used for keychain operations. Defaults to 'certificate_manager'.
-        Returns:
-            None: None
+    """
+    Keychain Certstore
+    """
     def __init__(self, service_name="certificate_manager"):
         """
         A class for managing certificates in a keychain using encryption.
         Args:
             service_name str: The name of the service used for keychain operations. Default is 'certificate_manager'.
-        Returns:
-            bool: True if the certificate was successfully removed, False if it did not exist.
         """
         self.service_name = service_name
         # Get or create encryption key from keychain
@@ -99,12 +93,10 @@ class CertificateKeychain:
 
     def store_certificate(self, cert_name, cert_data):
         """
-        """
+        Stores a certificate in Keychain
         Args:
             cert_name string: The name under which the certificate data will be stored in the keychain.
             cert_data dict: A dictionary containing private_key, certificate, and password.
-        """
-        cert_data should be a dict containing private_key, certificate, and password
         """
         # Encrypt the certificate data
         encrypted_data = self.fernet.encrypt(json.dumps(cert_data).encode())
@@ -131,6 +123,9 @@ class CertificateKeychain:
 
 
 class VaultCertificateStore:
+    """
+    hashi vault cert store
+    """
     def __init__(
         self,
         url="http://localhost:8200",
@@ -200,17 +195,13 @@ class VaultCertificateStore:
             print(f"Error removing certificate from Vault: {e}")
             return False
 
+
 class OCIVaultCertificateStore:
+    """
+    Provides functionality to interact with OCI Vault for storing, retrieving, and removing certificate data.
+    """
+
     def __init__(self, config_path=None, vault_id=None, compartment_id=None):
-        """
-        Provides functionality to interact with OCI Vault for storing, retrieving, and removing certificate data.
-        Args:
-            config_path str: Path to OCI config file. If not provided, defaults to the default config file.
-            vault_id str: OCI Vault OCID. Used for creating and managing certificates.
-            compartment_id str: OCI Compartment OCID. Used for creating and managing certificates.
-        Returns:
-            bool: Indicates whether the operation was successful.
-        """
         """Initialize OCI Vault certificate store
 
         Args:
@@ -247,8 +238,7 @@ class OCIVaultCertificateStore:
                 key_id=self.vault_id,  # Using vault ID as key ID
                 secret_name=f"cert_{cert_name}",
             )
-
-            self.secrets_client.create_secret(create_secret_details)
+            self.vault_client.create_secret(create_secret_details)
             return True
         except Exception as e:
             print(f"Error storing certificate in OCI Vault: {e}")
@@ -287,7 +277,10 @@ class OCIVaultCertificateStore:
         """
         try:
             # Schedule secret deletion
-            self.secrets_client.schedule_secret_deletion(secret_id=f"cert_{cert_name}")
+            self.vault_client.schedule_secret_deletion(
+                secret_id=f"cert_{cert_name}",
+                schedule_secret_deletion_details={},
+            )
             return True
         except Exception as e:
             print(f"Error removing certificate from OCI Vault: {e}")

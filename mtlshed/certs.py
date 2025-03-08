@@ -1,4 +1,12 @@
+"""mtlshed"""
+
 from typing import List, Optional, Dict, Any
+from datetime import datetime, timedelta
+import os
+import secrets
+import base64
+import json
+import argparse
 from cryptography import x509
 from cryptography.x509.oid import NameOID
 from cryptography.hazmat.primitives import hashes, serialization
@@ -6,12 +14,6 @@ from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509 import Certificate, Name
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey, RSAPublicKey
-from datetime import datetime, timedelta
-import os
-import secrets
-import base64
-import json
-import argparse
 
 
 from textual.app import App, ComposeResult
@@ -26,6 +28,8 @@ from mtlshed.options import parse_args
 
 
 class DefaultArgs:
+    """default cert args"""
+
     def __init__(self) -> None:
         """
         Initializes an instance of the class with default values for various configuration parameters related to certificate generation or management.
@@ -53,17 +57,17 @@ def generate_passphrase(
     num_words: int = 6,
     separator: str = "-",
     capitalize: bool = True,
-"""
-Generates a passphrase by randomly selecting words from a given list and joining them with a specified separator.
-Args:
-    word_list List[str]: A list of words from which to randomly select for the passphrase.
-    num_words int = 6: The number of words to include in the passphrase. Defaults to 6.
-    separator str = '-': The string used to join the selected words to form the passphrase. Defaults to '-'.
-    capitalize bool = True: If True, the first letter of each word in the passphrase will be capitalized. Defaults to True.
-Returns:
-    str: The generated passphrase as a single string.
-"""
 ) -> str:
+    """
+    Generates a passphrase by randomly selecting words from a given list and joining them with a specified separator.
+    Args:
+        word_list List[str]: A list of words from which to randomly select for the passphrase.
+        num_words int = 6: The number of words to include in the passphrase. Defaults to 6.
+        separator str = '-': The string used to join the selected words to form the passphrase. Defaults to '-'.
+        capitalize bool = True: If True, the first letter of each word in the passphrase will be capitalized. Defaults to True.
+    Returns:
+        str: The generated passphrase as a single string.
+    """
     words: List[str] = [secrets.choice(word_list) for _ in range(num_words)]
     if capitalize:
         words = [word.capitalize() for word in words]
@@ -110,19 +114,19 @@ def create_certificate(
     issuer_key: Optional[RSAPrivateKey] = None,
     is_ca: bool = False,
     valid_days: int = 365,
-"""
-Creates a digital certificate using the provided private key, subject name, and issuer information. If the issuer key is not provided, it uses the private key as the issuer. The certificate can be configured to be a Certificate Authority (CA) and specifies a validity period.
-Args:
-    private_key RSAPrivateKey: The private key used to sign the certificate.
-    subject_name Name: The subject's distinguished name (DN).
-    issuer_name Name: The issuer's distinguished name (DN).
-    issuer_key Optional[RSAPrivateKey]: The private key of the issuer. If not provided, the private key is used as the issuer.
-    is_ca bool: If true, the certificate will be a Certificate Authority (CA).
-    valid_days int: The number of days the certificate is valid for.
-Returns:
-    Certificate: The created digital certificate.
-"""
 ) -> Certificate:
+    """
+    Creates a digital certificate using the provided private key, subject name, and issuer information. If the issuer key is not provided, it uses the private key as the issuer. The certificate can be configured to be a Certificate Authority (CA) and specifies a validity period.
+    Args:
+        private_key RSAPrivateKey: The private key used to sign the certificate.
+        subject_name Name: The subject's distinguished name (DN).
+        issuer_name Name: The issuer's distinguished name (DN).
+        issuer_key Optional[RSAPrivateKey]: The private key of the issuer. If not provided, the private key is used as the issuer.
+        is_ca bool: If true, the certificate will be a Certificate Authority (CA).
+        valid_days int: The number of days the certificate is valid for.
+    Returns:
+        Certificate: The created digital certificate.
+    """
     if issuer_key is None:
         issuer_key = private_key
 
@@ -149,6 +153,9 @@ Returns:
 
 
 def save_key(key: RSAPrivateKey, filename: str, password: Optional[str] = None) -> None:
+    """
+    Saves a private key to a file in PEM format
+    """
     encryption = (
         serialization.BestAvailableEncryption(password.encode())
         if password
@@ -182,18 +189,18 @@ def save_pfx(
     ca_cert: Certificate,
     filename: str,
     password: str,
-"""
-Saves a PKCS#12 file containing a private key, certificate, and CA certificate.
-Args:
-    key RSAPrivateKey: The private key to include in the PKCS#12 file.
-    cert Certificate: The certificate to include in the PKCS#12 file.
-    ca_cert Certificate: The CA certificate to include in the PKCS#12 file.
-    filename str: The path to the file where the PKCS#12 data will be saved.
-    password str: The password to encrypt the PKCS#12 file.
-Returns:
-    None: This function does not return anything.
-"""
 ) -> None:
+    """
+    Saves a PKCS#12 file containing a private key, certificate, and CA certificate.
+    Args:
+        key RSAPrivateKey: The private key to include in the PKCS#12 file.
+        cert Certificate: The certificate to include in the PKCS#12 file.
+        ca_cert Certificate: The CA certificate to include in the PKCS#12 file.
+        filename str: The path to the file where the PKCS#12 data will be saved.
+        password str: The password to encrypt the PKCS#12 file.
+    Returns:
+        None: This function does not return anything.
+    """
     pfx_data: bytes = pkcs12.serialize_key_and_certificates(
         name=b"client-cert",
         key=key,
@@ -212,19 +219,19 @@ def add_client(
     ca_key: RSAPrivateKey,
     words: List[str],
     passwd: Optional[str] = None,
-"""
-Add a new client certificate with keychain storage
-Args:
-    client_name str: The name of the client certificate to be added.
-    args DefaultArgs: Configuration arguments for the client certificate creation.
-    ca_cert Certificate: The CA certificate used to sign the client certificate.
-    ca_key RSAPrivateKey: The CA private key used to sign the client certificate.
-    words List[str]: A list of words used to generate a passphrase if no password is provided.
-    passwd Optional[str]: An optional password for encrypting the client certificate. If not provided, a passphrase will be generated using the provided words.
-Returns:
-    None: This function does not return any value.
-"""
-    """Add a new client certificate with keychain storage"""
+):
+    """
+    Add a new client certificate with keychain storage
+    Args:
+        client_name str: The name of the client certificate to be added.
+        args DefaultArgs: Configuration arguments for the client certificate creation.
+        ca_cert Certificate: The CA certificate used to sign the client certificate.
+        ca_key RSAPrivateKey: The CA private key used to sign the client certificate.
+        words List[str]: A list of words used to generate a passphrase if no password is provided.
+        passwd Optional[str]: An optional password for encrypting the client certificate. If not provided, a passphrase will be generated using the provided words.
+    Returns:
+        None: This function does not return any value.
+    """
     password = passwd or generate_passphrase(words)
 
     client_key = create_key_pair(args.key_size)
@@ -284,7 +291,9 @@ def get_cert_info(cert: Certificate) -> Dict[str, Any]:
     subject = cert.subject
     issuer = cert.issuer
     info: Dict[str, Any] = {
+        # pylint: disable=protected-access
         "subject": {attr.oid._name: attr.value for attr in subject},
+        # pylint: disable=protected-access
         "issuer": {attr.oid._name: attr.value for attr in issuer},
         "serial_number": cert.serial_number,
         "not_valid_before": cert.not_valid_before,
@@ -326,6 +335,8 @@ def list_certificates(output_dir: str) -> List[str]:
 
 
 def get_client_password(
+    cert_store: CertificateKeychain, client_name: str
+) -> Optional[str]:
     """
     Retrieve client certificate password from keychain
     Args:
@@ -334,8 +345,6 @@ def get_client_password(
     Returns:
         Optional[str]: The client certificate password if found, otherwise None.
     """
-) -> Optional[str]:
-    """Retrieve client certificate password from keychain"""
     cert_data = cert_store.get_certificate(client_name)
     if cert_data and "password" in cert_data:
         return cert_data["password"]
@@ -368,6 +377,8 @@ def encrypt_for_recipient(public_key_path: str, data: Dict[str, Any]) -> str:
 
 
 def export_client_cert(
+    cert_store: CertificateKeychain, client_name: str, public_key_path: str
+) -> Optional[str]:
     """
     Export encrypted client certificate details
     Args:
@@ -377,8 +388,6 @@ def export_client_cert(
     Returns:
         Optional[str]: The encrypted client certificate details as a string, or None if the certificate was not found.
     """
-) -> Optional[str]:
-    """Export encrypted client certificate details"""
     # Get client cert data from keychain
     cert_data: Optional[Dict[str, Any]] = cert_store.get_certificate(client_name)
     if not cert_data:
@@ -418,15 +427,11 @@ def decrypt_certificate(encrypted_data: str, private_key_path: str) -> Dict[str,
 
 
 class CertificateManager:
-        """
-        """
-        Initializes a new instance of the class.
-        Args:
-            args object: An object containing various arguments for the class initialization.
-            cert_store object: An object representing the certificate store to be used.
+    """
+    This class handles various certificate management operations such as creating, loading, listing, exporting, and decrypting certificates.
+    """
     def __init__(self, args, cert_store):
         """
-        This class handles various certificate management operations such as creating, loading, listing, exporting, and decrypting certificates.
         Args:
             args Namespace: Namespace containing command-line arguments for configuration.
             cert_store CertificateStore: Object responsible for storing and retrieving certificate data.
@@ -439,7 +444,7 @@ class CertificateManager:
     def _load_word_list(self):
         """Load word list from file if specified"""
         if self.args.word_list_file:
-            with open(self.args.word_list_file, "r") as f:
+            with open(self.args.word_list_file, "r", encoding="utf-8") as f:
                 return [line.strip() for line in f.readlines()]
         return []
 
@@ -472,7 +477,7 @@ class CertificateManager:
         Args:
             self object: The instance of the class.
         """
-        cert_path = self._get_cert_path()
+        cert_path = self.output_dir
         if not cert_path:
             # Try getting from cert store for client certs
             cert_data = self.cert_store.get_certificate(self.args.name)
@@ -503,7 +508,7 @@ class CertificateManager:
             self.cert_store, self.args.name, self.args.public_key
         )
         if encrypted_data:
-            with open(self.args.output, "w") as f:
+            with open(self.args.output, "w", encoding="utf-8") as f:
                 f.write(encrypted_data)
             print(
                 f"Exported encrypted certificate data for {self.args.name} to {self.args.output}"
@@ -522,10 +527,10 @@ class CertificateManager:
             None: No value is returned.
         """
         try:
-            with open(self.args.input, "r") as f:
+            with open(self.args.input, "r", encoding="utf-8") as f:
                 encrypted_data = f.read()
             cert_data = decrypt_certificate(encrypted_data, self.args.private_key)
-            self._display_decrypted_data(cert_data)
+            print(cert_data)
         except Exception as e:
             print(f"Error decrypting certificate data: {e}")
 
@@ -790,6 +795,7 @@ class CertListScreen(Screen):
             )
             table.add_row(cert, cert_type, "Valid")
 
+
 class ExportCertScreen(Screen):
     """Screen for exporting certificates"""
 
@@ -801,6 +807,7 @@ class ExportCertScreen(Screen):
             Button("Export", id="export_button", variant="primary"),
             Button("Back", id="back_button"),
         )
+
 
 class ImportCertScreen(Screen):
     """Screen for importing certificates"""
@@ -819,6 +826,7 @@ class ImportCertScreen(Screen):
             Button("Back", id="back_button"),
         )
 
+
 class AddClientScreen(Screen):
     """Screen for adding a new client"""
 
@@ -830,6 +838,7 @@ class AddClientScreen(Screen):
             Button("Add Client", id="add_client_button", variant="primary"),
             Button("Back", id="back_button"),
         )
+
 
 class RemoveClientScreen(Screen):
     """
@@ -846,6 +855,7 @@ class RemoveClientScreen(Screen):
             Button("Back", id="back_button"),
         )
 
+
 class GetPasswordScreen(Screen):
     """
     Screen for getting a client's password
@@ -860,6 +870,7 @@ class GetPasswordScreen(Screen):
             Button("Get Password", id="get_password_button", variant="primary"),
             Button("Back", id="back_button"),
         )
+
 
 class DecryptScreen(Screen):
     """Screen for decrypting certificate data"""
@@ -877,6 +888,7 @@ class DecryptScreen(Screen):
             Button("Decrypt", id="decrypt_button", variant="primary"),
             Button("Back", id="back_button"),
         )
+
 
 class CertificateManagerApp(App):
     """
@@ -903,7 +915,7 @@ class CertificateManagerApp(App):
         "add_client": AddClientScreen,
         "remove_client": RemoveClientScreen,
         "get_password": GetPasswordScreen,
-        "decrypt": DecryptScreen
+        "decrypt": DecryptScreen,
     }
 
     def __init__(self, cert_manager: CertificateManager):
@@ -976,15 +988,17 @@ class CertificateManagerApp(App):
         screen = self.screen
         client_name = screen.query_one("#client_name").value
         public_key_path = screen.query_one("#public_key_path").value
-        
+
         if not client_name or not public_key_path:
             self.notify("Please enter both client name and public key path")
             return
 
-        encrypted_data = export_client_cert(self.cert_manager.cert_store, client_name, public_key_path)
+        encrypted_data = export_client_cert(
+            self.cert_manager.cert_store, client_name, public_key_path
+        )
         if encrypted_data:
             output_path = f"{client_name}_exported.enc"
-            with open(output_path, "w") as f:
+            with open(output_path, "w", encoding="utf-8") as f:
                 f.write(encrypted_data)
             self.notify(f"Certificate exported to {output_path}")
         else:
@@ -997,7 +1011,7 @@ class CertificateManagerApp(App):
         screen = self.screen
         encrypted_data = screen.query_one("#encrypted_data").value
         private_key_path = screen.query_one("#private_key_path").value
-        
+
         if not encrypted_data or not private_key_path:
             self.notify("Please enter both encrypted data and private key path")
             return
@@ -1024,7 +1038,9 @@ class CertificateManagerApp(App):
 
         try:
             self.cert_manager.args.client_names = [client_name]
-            self.cert_manager.args.client_passwords = [client_password] if client_password else None
+            self.cert_manager.args.client_passwords = (
+                [client_password] if client_password else None
+            )
             self.cert_manager.add_clients()
             self.notify(f"Client {client_name} added successfully")
         except Exception as e:
@@ -1143,6 +1159,9 @@ def _main(args: argparse.Namespace):
 
 
 def main():
+    """
+    Main CLI entry
+    """
     args = parse_args()
     # Setup certificate store based on config
     if args.config:
