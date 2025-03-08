@@ -110,6 +110,18 @@ def create_certificate(
     issuer_key: Optional[RSAPrivateKey] = None,
     is_ca: bool = False,
     valid_days: int = 365,
+"""
+Creates a digital certificate using the provided private key, subject name, and issuer information. If the issuer key is not provided, it uses the private key as the issuer. The certificate can be configured to be a Certificate Authority (CA) and specifies a validity period.
+Args:
+    private_key RSAPrivateKey: The private key used to sign the certificate.
+    subject_name Name: The subject's distinguished name (DN).
+    issuer_name Name: The issuer's distinguished name (DN).
+    issuer_key Optional[RSAPrivateKey]: The private key of the issuer. If not provided, the private key is used as the issuer.
+    is_ca bool: If true, the certificate will be a Certificate Authority (CA).
+    valid_days int: The number of days the certificate is valid for.
+Returns:
+    Certificate: The created digital certificate.
+"""
 ) -> Certificate:
     if issuer_key is None:
         issuer_key = private_key
