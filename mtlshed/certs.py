@@ -864,7 +864,9 @@ class CertificateManagerApp(App):
         self.pop_screen()
 
     def _handle_export_certificate(self):
-        """Handle certificate export"""
+        """
+        Handle certificate export
+        """
         screen = self.screen
         client_name = screen.query_one("#client_name").value
         public_key_path = screen.query_one("#public_key_path").value
