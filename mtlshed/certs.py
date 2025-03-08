@@ -406,7 +406,15 @@ class CertificateManager:
             print(f"Client certificate not found: {self.args.name}")
 
     def decrypt_cert(self):
-        """Handle decrypt command"""
+        """
+        Handle decrypt command
+        Params:
+            self object: The instance of the class.
+            input str: Path to the file containing encrypted certificate data.
+            private_key str: Path to the private key file used for decryption.
+        Returns:
+            None: No value is returned.
+        """
         try:
             with open(self.args.input, "r") as f:
                 encrypted_data = f.read()
