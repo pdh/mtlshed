@@ -310,7 +310,13 @@ def load_certificate(cert_path: str) -> Certificate:
 
 
 def list_certificates(output_dir: str) -> List[str]:
-    """List all certificates in the directory"""
+    """
+    List all certificates in the directory
+    Args:
+        output_dir str: The directory containing certificate files.
+    Returns:
+        List[str]: A sorted list of certificate names.
+    """
     certs: List[str] = []
     for filename in os.listdir(output_dir):
         if filename.endswith((".crt", ".pfx")):
