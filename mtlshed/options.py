@@ -103,7 +103,13 @@ def parse_args() -> argparse.Namespace:
 
 
 def validate_args(args: argparse.Namespace) -> None:
-    """Validate required arguments based on command"""
+    """
+    Validate required arguments based on command
+    Args:
+        args argparse.Namespace: Namespace containing the parsed command-line arguments
+    Returns:
+        None: No explicit return value; function raises an exception if validation fails
+    """
     if not args.command:
         return
 
