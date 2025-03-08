@@ -655,7 +655,11 @@ class CreateCertScreen(Screen):
 
 
 class CertListScreen(Screen):
-    """Screen for listing certificates"""
+    """
+    Screen for listing certificates
+    Yields:
+        Container: A container with a title label, a data table, and a back button.
+    """
 
     def compose(self) -> ComposeResult:
         yield Container(
