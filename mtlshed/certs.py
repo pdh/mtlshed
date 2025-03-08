@@ -361,7 +361,11 @@ class CertificateManager:
             print(f"No password found for client: {self.args.name}")
 
     def show_info(self):
-        """Handle info command"""
+        """
+        Handle info command
+        Args:
+            self object: The instance of the class.
+        """
         cert_path = self._get_cert_path()
         if not cert_path:
             # Try getting from cert store for client certs
