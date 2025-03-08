@@ -474,7 +474,9 @@ class CertificateManager:
         save_cert(server_cert, os.path.join(self.output_dir, "server.crt"))
 
     def add_clients(self):
-        """Handle add command"""
+        """
+        Handle the add command for adding clients.
+        """
         ca_data = self.cert_store.get_certificate("ca")
         if not ca_data:
             print("CA certificate not found. Please run 'create' command first.")
