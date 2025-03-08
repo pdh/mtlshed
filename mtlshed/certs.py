@@ -490,7 +490,11 @@ class CertificateManager:
         self._create_client_certs(ca_cert, ca_key)
 
     def remove_clients(self):
-        """Handle remove command"""
+        """
+        Handle remove command
+        Args:
+            client_names list[str]: List of client names to be removed from the certificate store and their corresponding PFX files.
+        """
         for client_name in self.args.client_names:
             if self.cert_store.remove_certificate(client_name):
                 print(f"Removed certificate from store: {client_name}")
