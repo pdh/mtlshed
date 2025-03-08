@@ -3,7 +3,13 @@ import argparse
 
 
 def add_all_arguments(parser: argparse.ArgumentParser) -> None:
-    """Add all possible arguments to the parser"""
+    """
+    Add all possible arguments to the parser
+    Args:
+        parser argparse.ArgumentParser: The parser to which arguments will be added.
+    Returns:
+        None: This function does not return anything.
+    """
 
     # Common certificate configuration
     parser.add_argument("--config", type=str, help="Path to config file")
