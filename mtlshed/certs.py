@@ -347,7 +347,13 @@ class CertificateManager:
             print(cert_name)
 
     def get_password(self):
-        """Handle get-password command"""
+        """
+        Handle get-password command
+        Args:
+            self object: The instance of the class.
+        Returns:
+            None: This method does not return a value.
+        """
         password = get_client_password(self.cert_store, self.args.name)
         if password:
             print(f"Password for {self.args.name}: {password}")
