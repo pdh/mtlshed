@@ -27,6 +27,11 @@ class CertStoreConfig:
 
     @property
     def store_type(self) -> str:
+        """
+        Stores the type of the configuration.
+        Yields:
+            str: The type of the configuration.
+        """
         return self.config.get("store_type", "keychain")
 
     @property
