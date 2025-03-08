@@ -53,6 +53,16 @@ def generate_passphrase(
     num_words: int = 6,
     separator: str = "-",
     capitalize: bool = True,
+"""
+Generates a passphrase by randomly selecting words from a given list and joining them with a specified separator.
+Args:
+    word_list List[str]: A list of words from which to randomly select for the passphrase.
+    num_words int = 6: The number of words to include in the passphrase. Defaults to 6.
+    separator str = '-': The string used to join the selected words to form the passphrase. Defaults to '-'.
+    capitalize bool = True: If True, the first letter of each word in the passphrase will be capitalized. Defaults to True.
+Returns:
+    str: The generated passphrase as a single string.
+"""
 ) -> str:
     words: List[str] = [secrets.choice(word_list) for _ in range(num_words)]
     if capitalize:
