@@ -569,7 +569,11 @@ class CertificateManager:
                 )
 
     def _load_ca(self):
-        """Load existing CA certificate and key"""
+        """
+        Load existing CA certificate and key
+        Yields:
+            Tuple[Optional[x509.Certificate], Optional[serialization.PrivateKey]]: A tuple containing the loaded CA certificate and key. If the certificate is not found, both values will be None.
+        """
         ca_path = os.path.join(self.output_dir, "ca.crt")
         ca_key_path = os.path.join(self.output_dir, "ca.key")
 
