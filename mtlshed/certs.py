@@ -385,7 +385,14 @@ class CertificateManager:
             print(f"Certificate '{self.args.name}' not found")
 
     def export_cert(self):
-        """Handle export command"""
+        """
+        Handle export command
+        Params:
+            self object: The instance of the class.
+            args object: An object containing command-line arguments.
+        Returns:
+            None: No value is returned.
+        """
         encrypted_data = export_client_cert(
             self.cert_store, self.args.name, self.args.public_key
         )
