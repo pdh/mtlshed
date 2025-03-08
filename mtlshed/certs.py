@@ -905,7 +905,9 @@ class CertificateManagerApp(App):
             self.notify(f"Failed to import certificate: {str(e)}")
 
     def _handle_add_client(self):
-        """Handle adding a new client"""
+        """
+        Handle adding a new client
+        """
         screen = self.screen
         client_name = screen.query_one("#client_name").value
         client_password = screen.query_one("#client_password").value
