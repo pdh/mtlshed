@@ -521,7 +521,14 @@ class CertificateManager:
         return ca_cert, ca_key
 
     def _create_server_cert(self, ca_cert, ca_key):
-        """Create server certificate"""
+        """
+        Create server certificate
+        Args:
+            ca_cert unknown: Certificate of the Certificate Authority
+            ca_key unknown: Key of the Certificate Authority
+        Yields:
+            unknown: None
+        """
         server_key = create_key_pair(self.args.key_size)
         server_name = create_cert_name(self.args.server_cn, self.args)
         server_cert = create_certificate(
