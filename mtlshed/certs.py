@@ -368,7 +368,15 @@ def encrypt_for_recipient(public_key_path: str, data: Dict[str, Any]) -> str:
 
 
 def export_client_cert(
-    cert_store: CertificateKeychain, client_name: str, public_key_path: str
+    """
+    Export encrypted client certificate details
+    Args:
+        cert_store CertificateKeychain: The certificate keychain from which to retrieve the client certificate.
+        client_name str: The name of the client whose certificate should be exported.
+        public_key_path str: The path to the public key file used for encrypting the client certificate.
+    Returns:
+        Optional[str]: The encrypted client certificate details as a string, or None if the certificate was not found.
+    """
 ) -> Optional[str]:
     """Export encrypted client certificate details"""
     # Get client cert data from keychain
