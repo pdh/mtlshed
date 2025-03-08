@@ -196,6 +196,15 @@ class VaultCertificateStore:
 
 class OCIVaultCertificateStore:
     def __init__(self, config_path=None, vault_id=None, compartment_id=None):
+        """
+        Provides functionality to interact with OCI Vault for storing, retrieving, and removing certificate data.
+        Args:
+            config_path str: Path to OCI config file. If not provided, defaults to the default config file.
+            vault_id str: OCI Vault OCID. Used for creating and managing certificates.
+            compartment_id str: OCI Compartment OCID. Used for creating and managing certificates.
+        Returns:
+            bool: Indicates whether the operation was successful.
+        """
         """Initialize OCI Vault certificate store
 
         Args:
